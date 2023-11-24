@@ -18,7 +18,7 @@ class GraphicEngine:
 
     
     def draw_rectangle(self, position, size, rotation, color):
-        posX, posY = self.euclid_to_pixels(position)
+        posX, posY = self.euclid_to_pixels(position.reshape(1, -1))[0]
 
         sizeX = size[0] * self.screen_res[1] / self.camera_FOV
         sizeY = size[1] * self.screen_res[1] / self.camera_FOV

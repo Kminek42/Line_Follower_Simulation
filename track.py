@@ -9,18 +9,27 @@ class Track:
         self.tile_size = tile_size
 
         self.segments = {
-            "straight": np.array([[0, 0], [0, 1]]),
-            "x-intersection": np.array([[0, 0], [0, 0.5], [1, 0.5], [-1, 0.5], [0, 0.5], [0, 1]]),
-            "90_right": np.array([[0, 0], [0, 0.5], [0.5, 0.5]]),
-            "90_left": np.array([[0, 0], [0, 0.5], [-0.5, 0.5]]),
+            #"90_right": np.array([[0, 0], [0, 0.5], [0.5, 0.5]]),
             "smooth_right": np.array([[0.0, 0.0], [0.08, 0.38], [0.29, 0.71], [0.62, 0.92], [1.0, 1.0]]),
+            "straight": np.array([[0, 0], [0, 1]]),
+            "x-intersection": np.array([[0, 0], [0, 0.5], [0.5, 0.5], [-0.5, 0.5], [0, 0.5], [0, 1]]),
+            #"90_left": np.array([[0, 0], [0, 0.5], [-0.5, 0.5]]),
             "smooth_left": np.array([[0.0, 0.0], [-0.08, 0.38], [-0.29, 0.71], [-0.62, 0.92], [-1.0, 1.0]]),
         }
         
     def add_segment(self, segment_type):
         if not segment_type in self.segments:
-            segment_type = np.random.choice(list(self.segments.keys()))
+            if self.angle < -80:
+                segment_type = np.random.choice(list(self.segments.keys())[:-2])
 
+            elif self.angle < 80:
+                segment_type = np.random.choice(list(self.segments.keys())[:])
+
+            else:
+                segment_type = np.random.choice(list(self.segments.keys())[2:])
+
+        print(segment_type)
+        print(self.angle)
         segment = self.segments[segment_type] * self.tile_size
 
         self.angle = np.radians(self.angle)
