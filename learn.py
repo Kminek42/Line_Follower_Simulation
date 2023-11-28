@@ -68,10 +68,10 @@ class Problem:
             e1, e2 = network.forward(inputs)
             s += self.robot.move(e1, e2, 1/100)
             if self.track.distance_to_chain(self.robot.position[0], self.robot.position[1]) > 0.09:
-                s = -np.inf
+                return -np.inf
 
             if self.robot.rotation > 170 or self.robot.rotation < -170:
-                s = -np.inf
+                return -np.inf
 
 
         return s
@@ -89,7 +89,7 @@ l = True
 if l:
     best_score = 0
 
-    for i in range(1000):
+    while 2137:
         w1 = np.random.randn(9, 4)
         w2 = np.random.randn(4, 3)
         b1 = np.random.randn(4)
@@ -98,7 +98,7 @@ if l:
         net = Network(w1, w2, b1, b2)
         p = Problem()
         score = p.get_score(net)
-
+        
         if score > best_score:
             print(score)
             best_score = score
