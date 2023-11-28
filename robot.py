@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 class Robot:
-    def __init__(self, max_motor_speed = 1, wheelbase = 0.12, lenght = 0.15, position = np.array([0, 0]), rotation = 0, sensor_width = 0.06, sensor_n = 8):
+    def __init__(self, max_motor_speed = 1, wheelbase = 0.12, engine_cutoff=0.1, lenght = 0.15, position = np.array([0, 0]), rotation = 0, sensor_width = 0.06, sensor_n = 8):
         self.max_motor_speed = max_motor_speed
         self.wheelbase = wheelbase
         self.lenght = lenght
@@ -10,6 +10,11 @@ class Robot:
         self.rotation = rotation
         self.sensor_n = sensor_n
         self.sensor_width = sensor_width
+        self.search_index = 0
+        self.cutoff = engine_cutoff
+
+        self.m1_v = 0
+        self.m2_v = 0
 
     def draw(self, graphic_engine):
         # draw breadboard
@@ -52,16 +57,27 @@ class Robot:
             )
 
     def move(self, motor_l, motor_r, dt):
+        # limit input
         motor_l = np.max([np.min([1, motor_l]), -1])
         motor_r = np.max([np.min([1, motor_r]), -1])
 
+        # apply dt and max_speed
         motor_l *= self.max_motor_speed * dt
         motor_r *= self.max_motor_speed * dt
-        alpha = np.arctan((motor_r - motor_l) / self.wheelbase)
+
+        self.m1_v += self.cutoff * (motor_l - self.m1_v)
+        self.m2_v += self.cutoff * (motor_r - self.m2_v)
+
+        # calculate angle robot needs to rotate
+        alpha = np.arctan((self.m2_v - self.m1_v) / self.wheelbase)
         if alpha == 0:
             alpha = 1e-3
         
-        l = (motor_r + motor_l) / (2 * np.tan(alpha))
+        # movement is done by rotating robot around certain point
+        # in case there is no rotatioin, we pretend it is rotating around point far way
+
+        # l is the radius of the rotation
+        l = (self.m2_v + self.m1_v) / (2 * np.tan(alpha))
 
         x2 = self.position[0] - l * np.cos(np.deg2rad(self.rotation))
         y2 = self.position[1] + l * np.sin(np.deg2rad(self.rotation))
@@ -77,6 +93,7 @@ class Robot:
         output = []
         X = np.linspace(-self.sensor_width / 2, self.sensor_width / 2, self.sensor_n)
         for num in X:
+            # rotates sensor around center of the robot
             p = rotate_point_around_center(self.position + np.array([num, self.lenght]), self.position, np.deg2rad(-self.rotation))
             d = track.distance_to_chain(p[0], p[1])
             # output.append(np.max([0, 1 - 50 * p]))

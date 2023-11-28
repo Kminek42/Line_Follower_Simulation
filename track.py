@@ -9,11 +9,11 @@ class Track:
         self.tile_size = tile_size
 
         self.segments = {
-            #"90_right": np.array([[0, 0], [0, 0.5], [0.5, 0.5]]),
+            "90_right": np.array([[0, 0], [0, 0.8], [0.8, 0.8]]),
             "smooth_right": np.array([[0.0, 0.0], [0.08, 0.38], [0.29, 0.71], [0.62, 0.92], [1.0, 1.0]]),
             "straight": np.array([[0, 0], [0, 1]]),
-            "x-intersection": np.array([[0, 0], [0, 0.5], [0.5, 0.5], [-0.5, 0.5], [0, 0.5], [0, 1]]),
-            #"90_left": np.array([[0, 0], [0, 0.5], [-0.5, 0.5]]),
+            "x-intersection": np.array([[0, 0], [0, 0.5], [1, 0.5], [-1, 0.5], [0, 0.5], [0, 1]]),
+            "90_left": np.array([[0, 0], [0, 0.8], [-0.8, 0.8]]),
             "smooth_left": np.array([[0.0, 0.0], [-0.08, 0.38], [-0.29, 0.71], [-0.62, 0.92], [-1.0, 1.0]]),
         }
         
@@ -28,8 +28,6 @@ class Track:
             else:
                 segment_type = np.random.choice(list(self.segments.keys())[2:])
 
-        print(segment_type)
-        print(self.angle)
         segment = self.segments[segment_type] * self.tile_size
 
         self.angle = np.radians(self.angle)
@@ -52,12 +50,12 @@ class Track:
         
     def distance_to_chain(self, xp, yp):
         '''Calculates distance between point [xp, yp] and chain (array of points)'''
-
+        search_points = self._filter_points_within_square(np.array([xp, yp]), 0.5)
         min_distance = float('inf')
 
-        for i in range(len(self.chain) - 1):
-            x1, y1 = self.chain[i]
-            x2, y2 = self.chain[i + 1]
+        for i in range(len(search_points) - 1):
+            x1, y1 = search_points[i]
+            x2, y2 = search_points[i + 1]
 
             # Calculate the squared distance between the point and the line segment
             dx = x2 - x1
@@ -83,3 +81,19 @@ class Track:
                 min_distance = segment_distance
 
         return min_distance
+
+    def _filter_points_within_square(self, center_point, square_side):
+        # Convert points and center_point to numpy arrays
+        center_point = np.array(center_point)
+        
+        # Calculate the boundaries of the square
+        min_bound = center_point - square_side / 2
+        max_bound = center_point + square_side / 2
+        
+        # Find indices of points within the square boundaries
+        within_bounds_indices = np.all((self.chain >= min_bound) & (self.chain <= max_bound), axis=1)
+        
+        # Filter points within the square
+        points_within_square = self.chain[within_bounds_indices]
+        
+        return points_within_square
