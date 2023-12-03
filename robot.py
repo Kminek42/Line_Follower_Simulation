@@ -1,8 +1,7 @@
-import math
 import numpy as np
 
 class Robot:
-    def __init__(self, max_motor_speed = 1, wheelbase = 0.12, engine_cutoff=0.1, lenght = 0.15, position = np.array([0, 0]), rotation = 0, sensor_width = 0.06, sensor_n = 8):
+    def __init__(self, max_motor_speed = 1, wheelbase = 0.12, engine_cutoff=0.05, lenght = 0.15, position = np.array([0, 0]), rotation = 0, sensor_width = 0.07, sensor_n = 8):
         self.max_motor_speed = max_motor_speed
         self.wheelbase = wheelbase
         self.lenght = lenght
@@ -29,7 +28,8 @@ class Robot:
         graphic_engine.draw_rectangle(
             np.array([
                 self.position[0] + 0.5 * self.wheelbase * np.cos(np.deg2rad(self.rotation)),
-                self.position[1] + 0.5 * self.wheelbase * np.sin(np.deg2rad(-self.rotation))]), 
+                self.position[1] + 0.5 * self.wheelbase * np.sin(np.deg2rad(-self.rotation))]
+            ), 
             np.array([0.02, 0.03]), 
             self.rotation,
             (255, 0, 0)
@@ -39,7 +39,8 @@ class Robot:
         graphic_engine.draw_rectangle(
             np.array([
                 self.position[0] - 0.5 * self.wheelbase * np.cos(np.deg2rad(self.rotation)),
-                self.position[1] - 0.5 * self.wheelbase * np.sin(np.deg2rad(-self.rotation))]), 
+                self.position[1] - 0.5 * self.wheelbase * np.sin(np.deg2rad(-self.rotation))]
+            ), 
             np.array([0.02, 0.03]), 
             self.rotation,
             (255, 0, 0)
@@ -48,7 +49,7 @@ class Robot:
         # draw sensors
         X = np.linspace(-self.sensor_width / 2, self.sensor_width / 2, self.sensor_n)
         for num in X:
-            p = rotate_point_around_center(self.position + np.array([num, self.lenght]), self.position, np.deg2rad(-self.rotation))
+            p = _rotate_point_around_center(self.position + np.array([num, self.lenght]), self.position, np.deg2rad(-self.rotation))
             graphic_engine.draw_rectangle(
                 p, 
                 np.array([0.01, 0.01]), 
@@ -84,7 +85,7 @@ class Robot:
 
         rotation_center = np.array([x2, y2])
         
-        self.position = rotate_point_around_center(self.position, rotation_center, alpha)
+        self.position = _rotate_point_around_center(self.position, rotation_center, alpha)
         self.rotation -= np.rad2deg(alpha)
 
         return (motor_l + motor_r) / 2
@@ -94,7 +95,7 @@ class Robot:
         X = np.linspace(-self.sensor_width / 2, self.sensor_width / 2, self.sensor_n)
         for num in X:
             # rotates sensor around center of the robot
-            p = rotate_point_around_center(self.position + np.array([num, self.lenght]), self.position, np.deg2rad(-self.rotation))
+            p = _rotate_point_around_center(self.position + np.array([num, self.lenght]), self.position, np.deg2rad(-self.rotation))
             d = track.distance_to_chain(p[0], p[1])
             # output.append(np.max([0, 1 - 50 * p]))
             # output.append(track.distance_to_chain(p[0], p[1]) < (track.line_width / 2))
@@ -102,8 +103,7 @@ class Robot:
 
         return output
  
-
-def rotate_point_around_center(point, center, angle):
+def _rotate_point_around_center(point, center, angle):
     # Calculate the vector from center to point
     delta = point - center
     
