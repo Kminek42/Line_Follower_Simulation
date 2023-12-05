@@ -1,7 +1,7 @@
 import numpy as np
 
 class Robot:
-    def __init__(self, max_motor_speed = 1, wheelbase = 0.12, engine_cutoff=0.05, lenght = 0.15, position = np.array([0, 0]), rotation = 0, sensor_width = 0.07, sensor_n = 8):
+    def __init__(self, max_motor_speed = 1, wheelbase = 0.15, engine_cutoff=0.1, lenght = 0.15, position = np.array([0, 0]), rotation = 0, sensor_width = 0.07, sensor_n = 8):
         self.max_motor_speed = max_motor_speed
         self.wheelbase = wheelbase
         self.lenght = lenght

@@ -8,7 +8,7 @@ np.random.seed(0)
 
 t = simulation.Track()
 t.add_segment("straight")
-for _ in range(80):
+for _ in range(40):
     t.add_segment("")
 
 # plt.axis('equal')
@@ -18,18 +18,18 @@ for _ in range(80):
 def test_gens(gens):
     r = simulation.Robot()
 
-    c = simulation.RobotController(gens)
+    c = simulation.RobotController2(gens)
     s = simulation.Simulation(c, r, t, 1/200)
-    return s.get_score(20)
+    return s.get_score(10)
 
-g1 = np.random.randn(170)
-g2 = np.random.randn(170)
+g1 = np.random.randn(9)
+g2 = np.random.randn(9)
 
 i = 0
 while 2137:
     t0 = time()
     i += 1
-    s1, g1, s2, g2 = get_next_generation(g1, g2, test_gens, 256, 1/10)
+    s1, g1, s2, g2 = get_next_generation(g1, g2, test_gens, 64, 1/8)
     print(f"Generation: {i}\nScore: {s1}, {s2}\n\n")
     if s1 > s2:
         save_genotype(g1, "genotype.txt")

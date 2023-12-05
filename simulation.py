@@ -1,10 +1,10 @@
 import numpy as np
 from track import Track
 from robot import Robot
-from robot_controller import RobotController
+from robot_controller import RobotController, RobotController2
 
 class Simulation:
-    def __init__(self, controller: RobotController, robot: Robot, track: Track, dt: float):
+    def __init__(self, controller, robot: Robot, track: Track, dt: float):
         self.controller = controller
         self.robot = robot
         self.track = track
@@ -12,6 +12,9 @@ class Simulation:
 
     def get_score(self, simulation_time: float):
         self.robot.position = [0, 0]
+        self.robot.m1_v = 0
+        self.robot.m2_v = 0
+        self.robot.rotation = 0
 
         s = 0
         for _ in range(int(simulation_time / self.dt)):
@@ -20,9 +23,9 @@ class Simulation:
             s += self.robot.move(l, r, self.dt)
 
             if self.track.distance_to_chain(self.robot.position[0], self.robot.position[1]) > 0.15:
-                return -1e5
+                return 0
             
-            if self.robot.rotation > 135 or self.robot.rotation < -135:
-                return -1e5
+            if self.robot.rotation > 100 or self.robot.rotation < -100:
+                return 0
             
         return s

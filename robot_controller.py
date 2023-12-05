@@ -44,3 +44,56 @@ class RobotController:
         
     def __repr__(self):
         return f"genotype: {self.genotype}"
+
+
+class RobotController2:
+    def __init__(self, genotype: np.array):
+        self.w = genotype[:8].T
+        self.b = genotype[8]
+        
+    def get_motors(self, inputs):
+        if max(inputs) > 0.25:
+            self.last_in = inputs
+        else:
+            inputs = self.last_in
+
+        l = inputs @ self.w + self.b
+        r = inputs[::-1] @ self.w + self.b
+        return l, r
+        
+    def __repr__(self):
+        return f"genotype: {self.genotype}"
+
+
+class RobotController3:
+    def __init__(self):
+        self.w = np.linspace(-0.27124883, 0.69846197, 8)
+        self.scanning = True
+        self.track = []
+        self.steer_angle = 0
+        self.steer_cutoff = 1e-1
+        
+    def set_mode(self, is_scanning: bool):
+        self.scanning = is_scanning
+        if (is_scanning):
+            self.track = []
+
+    def get_motors(self, inputs):
+        if max(inputs) > 0.25:
+            self.last_in = inputs
+        else:
+            inputs = self.last_in
+
+        l = inputs @ self.w
+        r = inputs[::-1] @ self.w
+        if self.scanning:
+            l = np.min([l, 0.5])
+            r = np.min([r, 0.5])
+            s_a = l - r
+            self.steer_angle += self.steer_cutoff * (s_a - self.steer_angle)
+            print(self.steer_angle)
+        
+        return l, r
+        
+    def __repr__(self):
+        return f"genotype: {self.genotype}"
