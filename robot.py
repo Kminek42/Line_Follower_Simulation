@@ -1,7 +1,9 @@
 import numpy as np
 
 class Robot:
-    def __init__(self, max_motor_speed = 1, wheelbase = 0.15, engine_cutoff=0.1, lenght = 0.15, position = np.array([0, 0]), rotation = 0, sensor_width = 0.07, sensor_n = 8):
+    def __init__(self, max_motor_speed = 1, wheelbase = 0.2, engine_cutoff=0.1, 
+                 lenght = 0.14, position = np.array([0, 0]), rotation = 0, 
+                 sensor_width = 0.067, sensor_n = 8, sensor_noise = 0.2):
         self.max_motor_speed = max_motor_speed
         self.wheelbase = wheelbase
         self.lenght = lenght
@@ -9,6 +11,7 @@ class Robot:
         self.rotation = rotation
         self.sensor_n = sensor_n
         self.sensor_width = sensor_width
+        self.sensor_noise = sensor_noise
         self.search_index = 0
         self.cutoff = engine_cutoff
 
@@ -61,7 +64,7 @@ class Robot:
         # limit input
         motor_l = np.max([np.min([1, motor_l]), -1])
         motor_r = np.max([np.min([1, motor_r]), -1])
-
+        
         # apply dt and max_speed
         motor_l *= self.max_motor_speed * dt
         motor_r *= self.max_motor_speed * dt
@@ -97,9 +100,11 @@ class Robot:
             # rotates sensor around center of the robot
             p = _rotate_point_around_center(self.position + np.array([num, self.lenght]), self.position, np.deg2rad(-self.rotation))
             d = track.distance_to_chain(p[0], p[1])
-            # output.append(np.max([0, 1 - 50 * p]))
-            # output.append(track.distance_to_chain(p[0], p[1]) < (track.line_width / 2))
-            output.append(np.min([np.max([0, 1 - (d - track.line_width / 2) / 0.01]), 1]))
+            reading = 1 - (d - 0.018/2) / 0.01
+            reading = np.clip(reading, 0, 1)
+            reading += (2 * np.random.random() - 1) * self.sensor_noise
+            reading = np.clip(reading, 0, 1)
+            output.append(reading)
 
         return output
  

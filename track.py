@@ -51,7 +51,7 @@ class Track:
     def distance_to_chain(self, xp, yp):
         '''Calculates distance between point [xp, yp] and chain (array of points)'''
         search_points = self._filter_points_within_square(np.array([xp, yp]), 0.5)
-        min_distance = float('inf')
+        min_distance = float(100)
 
         for i in range(len(search_points) - 1):
             x1, y1 = search_points[i]

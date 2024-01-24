@@ -1,7 +1,7 @@
 import numpy as np
 from track import Track
 from robot import Robot
-from robot_controller import RobotController, RobotController2
+from robot_controller import RobotController, RobotController2, RobotController4
 
 class Simulation:
     def __init__(self, controller, robot: Robot, track: Track, dt: float):
