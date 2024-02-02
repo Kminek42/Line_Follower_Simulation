@@ -5,6 +5,7 @@ import numpy as np
 import robot
 import robot_controller
 import matplotlib.pyplot as plt
+from time import time
 
 pygame.init()
 
@@ -83,11 +84,14 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+    t0 = time()
     sensors = np.array(r.get_sensors(t))
     inputs = np.array(sensors)
     e1, e2 = c.get_motors(inputs)
     # print(e1, e2)
     ds = r.move(e1, e2, dt)
+    t0 = time() - t0
+    print(t0)
     s += ds
     print(np.round(ds / dt, 3))
     ge.draw_track(t)
