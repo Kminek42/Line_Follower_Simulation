@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import track
 
 class Robot:
     def __init__(self, *,
@@ -12,7 +13,9 @@ class Robot:
                  sensor_width, 
                  sensor_n, 
                  sensor_noise,
-                 min_speed):
+                 min_speed,
+                 sensor_radius,
+                 track_width):
 
         wheelbase = np.array(wheelbase)
         position = np.array(position)
@@ -34,6 +37,8 @@ class Robot:
         assert isinstance(sensor_noise, float)
         assert isinstance(engine_cutoff, float)
         assert isinstance(min_speed, float)
+        assert isinstance(sensor_radius, float)
+        assert isinstance(track_width, float)
 
         self.robot_n = wheelbase.shape[0]
 
@@ -50,6 +55,8 @@ class Robot:
         self.sensor_n = sensor_n
         self.sensor_width = sensor_width
         self.sensor_noise = sensor_noise
+        self.sensor_radius = sensor_radius
+        self.track_width = track_width
 
         self.m1_v = 0
         self.m2_v = 0
@@ -86,20 +93,30 @@ class Robot:
 
         return (self.m1_v + self.m2_v) / 2
 
-    def get_sensors(self, track):
-        output = []
-        X = np.linspace(-self.sensor_width / 2, self.sensor_width / 2, self.sensor_n)
-        for num in X:
-            # rotates sensor around center of the robot
-            p = _rotate_point_around_center(self.position + np.array([num, self.lenght]), self.position, np.deg2rad(-self.rotation))
-            d = track.distance_to_chain(p[0], p[1])
-            reading = 1 - (d - 0.018/2) / 0.01
-            reading = np.clip(reading, 0, 1)
-            reading += (2 * np.random.random() - 1) * self.sensor_noise
-            reading = np.clip(reading, 0, 1)
-            output.append(reading)
 
-        return output
+    def get_sensors(self, track: track.Track):
+        # Create vector of sensors of each robot (robot_n * sensor_n), for easy use in the track function
+        X = np.linspace(-self.sensor_width / 2, self.sensor_width / 2, self.sensor_n).T.reshape((-1))
+
+        Y = np.repeat(self.lenght, self.sensor_n)
+
+        angle = np.repeat(self.rotation, self.sensor_n)
+
+        x_rotated = X * np.cos(angle) - Y * np.sin(angle)
+        y_rotated = X * np.sin(angle) + Y * np.cos(angle)
+
+        positions = np.stack((x_rotated, y_rotated), axis=1)
+        print('positions:', positions)
+        positions += np.repeat(self.position, self.sensor_n, axis=1).T
+        print('new positions:', positions)
+        
+        readings = track.distance_to_chain(positions)
+        readings = (self.sensor_radius + self.track_width / 2 - readings) / self.sensor_radius
+        readings = np.clip(readings, 0.0, 1.0)
+        readings += self.sensor_noise * np.random.randn(self.robot_n * self.sensor_n)
+        readings = np.clip(readings, 0.0, 1.0)
+
+        return readings.reshape(self.robot_n, self.sensor_n)
     
     def draw(self, graphic_engine):
         # draw breadboard
@@ -164,23 +181,24 @@ def _rotate_point_around_center(point, center, angle):
 if __name__ == "__main__":
     r = Robot(
         max_motor_speed=1.0,
-        wheelbase=[0.2],
-        lenght=[0.14],
+        wheelbase=[0.2, 0.2],
+        lenght=[0.14, 0.2],
         engine_cutoff=0.005,
         rotation=0.0,
-        sensor_width=[0.067],
+        sensor_width=[0.1, 0.05],
         sensor_n=8,
-        sensor_noise=0.1,
+        sensor_noise=0.0,
+        sensor_radius=0.005,
         min_speed=0.1,
-        position=[0.0, 0.0]
+        position=[0.0, 0.0],
+        track_width=0.018
     )
-    print(r.position.shape)
-    X = []
-    Y = []
-    for _ in range(300):
-        r.move(np.array([0.9]), np.array([0.8]), 0.01)
-        X.append(r.position[0, 0])
-        Y.append(r.position[0, 1])
+    
+    t = track.Track()
+    for _ in range(4):
+        t.add_segment("straight")
 
-    plt.plot(X, Y)
-    plt.show()
+    t.finalize(10)
+    
+    # t.show_track()
+    print(r.get_sensors(t))

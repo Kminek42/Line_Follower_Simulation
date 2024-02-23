@@ -1,4 +1,8 @@
 import numpy as np
+from matplotlib.pyplot import axis, plot, show
+import timeit
+import time
+from scipy.spatial import KDTree
 import math
 
 class Track:
@@ -47,53 +51,43 @@ class Track:
             self.angle += 90
 
         self.chain = np.vstack((self.chain, segment[1:]))
+
+    def finalize(self, subdivisions):
+        t = self.chain
+        num_segments = len(t) - 1
+        interpolated_points = []
+        for i in range(num_segments):
+            segment_points = np.linspace(t[i], t[i + 1], num=subdivisions)
+            interpolated_points.append(segment_points)
+        interpolated_points = np.concatenate(interpolated_points)
+
+        self.quadtree = KDTree(interpolated_points)
+    
+    def distance_to_chain(self, P):
+        '''Calculates distance between points P (:, 2) and interpolated track'''
+        if P.ndim == 1:
+            P = P[np.newaxis, :]
+
+        # Query quadtree to find closest points
+        distances, _ = self.quadtree.query(P, k=1)
+
+        return distances
+    
+    def show_track(self):
+        plot(self.chain[:, 0], self.chain[:, 1])
+        axis("equal")
+        show()
         
-    def distance_to_chain(self, xp, yp):
-        '''Calculates distance between point [xp, yp] and chain (array of points)'''
-        search_points = self._filter_points_within_square(np.array([xp, yp]), 0.5)
-        min_distance = float(100)
 
-        for i in range(len(search_points) - 1):
-            x1, y1 = search_points[i]
-            x2, y2 = search_points[i + 1]
+if __name__ == "__main__":
+    t = Track()
+    for _ in range(80):
+        t.add_segment("")
+    print(t.chain.shape)
+    t.finalize(128)
+    points = np.array([[0.1, 0.51], [-0.4, 0.0], [0.01, 0.1], [-0.02, 0.2137]])
 
-            # Calculate the squared distance between the point and the line segment
-            dx = x2 - x1
-            dy = y2 - y1
+    a = t.distance_to_chain(points)
+    print(a)
 
-            if dx == 0 and dy == 0:
-                # If the segment is just a point, calculate the distance to that point
-                segment_distance = math.sqrt((xp - x1)**2 + (yp - y1)**2)
-            else:
-                t = ((xp - x1) * dx + (yp - y1) * dy) / (dx**2 + dy**2)
-
-                if t < 0:
-                    segment_distance = math.sqrt((xp - x1)**2 + (yp - y1)**2)
-                elif t > 1:
-                    segment_distance = math.sqrt((xp - x2)**2 + (yp - y2)**2)
-                else:
-                    segment_x = x1 + t * dx
-                    segment_y = y1 + t * dy
-                    segment_distance = math.sqrt((xp - segment_x)**2 + (yp - segment_y)**2)
-
-            # Update the minimum distance
-            if segment_distance < min_distance:
-                min_distance = segment_distance
-
-        return min_distance
-
-    def _filter_points_within_square(self, center_point, square_side):
-        # Convert points and center_point to numpy arrays
-        center_point = np.array(center_point)
-        
-        # Calculate the boundaries of the square
-        min_bound = center_point - square_side / 2
-        max_bound = center_point + square_side / 2
-        
-        # Find indices of points within the square boundaries
-        within_bounds_indices = np.all((self.chain >= min_bound) & (self.chain <= max_bound), axis=1)
-        
-        # Filter points within the square
-        points_within_square = self.chain[within_bounds_indices]
-        
-        return points_within_square
+    t.show_track()
