@@ -61,6 +61,8 @@ class Robot:
         self.m1_v = 0
         self.m2_v = 0
 
+        self.mileage = np.zeros((self.robot_n, ))
+
 
     def move(self, motor_l, motor_r, dt):
         # limit input
@@ -91,14 +93,13 @@ class Robot:
         self.position += translation * dt
         self.rotation += w * dt
 
+        self.mileage += (self.m1_v + self.m2_v) / 2 * dt
         return (self.m1_v + self.m2_v) / 2
 
+    def get_sensor_positions(self):
+        X = np.repeat(self.lenght, self.sensor_n)
 
-    def get_sensors(self, track: track.Track):
-        # Create vector of sensors of each robot (robot_n * sensor_n), for easy use in the track function
-        X = np.linspace(-self.sensor_width / 2, self.sensor_width / 2, self.sensor_n).T.reshape((-1))
-
-        Y = np.repeat(self.lenght, self.sensor_n)
+        Y = np.linspace(self.sensor_width / 2, -self.sensor_width / 2, self.sensor_n).T.reshape((-1))
 
         angle = np.repeat(self.rotation, self.sensor_n)
 
@@ -106,9 +107,12 @@ class Robot:
         y_rotated = X * np.sin(angle) + Y * np.cos(angle)
 
         positions = np.stack((x_rotated, y_rotated), axis=1)
-        print('positions:', positions)
-        positions += np.repeat(self.position, self.sensor_n, axis=1).T
-        print('new positions:', positions)
+        positions += np.repeat(self.position, self.sensor_n, axis=0)
+
+        return positions
+
+    def get_sensors(self, track: track.Track):
+        positions = self.get_sensor_positions()
         
         readings = track.distance_to_chain(positions)
         readings = (self.sensor_radius + self.track_width / 2 - readings) / self.sensor_radius
@@ -118,64 +122,51 @@ class Robot:
 
         return readings.reshape(self.robot_n, self.sensor_n)
     
+    def get_distance(self, track: track.Track):
+        '''Returns the distance from robot to the track'''
+        return track.distance_to_chain(self.position)
+
     def draw(self, graphic_engine):
+        rotation = np.rad2deg(self.rotation[0] - np.pi/2)
         # draw breadboard
         graphic_engine.draw_rectangle(
-            self.position, 
+            self.position[0], 
             np.array([0.03, 0.06]), 
-            self.rotation,
+            -rotation,
             (64, 255, 64)
         )
 
         # draw right wheel
         graphic_engine.draw_rectangle(
             np.array([
-                self.position[0] + 0.5 * self.wheelbase * np.cos(np.deg2rad(self.rotation)),
-                self.position[1] + 0.5 * self.wheelbase * np.sin(np.deg2rad(-self.rotation))]
+                self.position[0][0] + 0.5 * self.wheelbase * np.cos(np.deg2rad(rotation)),
+                self.position[0][1] - 0.5 * self.wheelbase * np.sin(np.deg2rad(-rotation))]
             ), 
             np.array([0.02, 0.03]), 
-            self.rotation,
+            -rotation,
             (255, 0, 0)
         )
 
         # draw left wheel
         graphic_engine.draw_rectangle(
             np.array([
-                self.position[0] - 0.5 * self.wheelbase * np.cos(np.deg2rad(self.rotation)),
-                self.position[1] - 0.5 * self.wheelbase * np.sin(np.deg2rad(-self.rotation))]
+                self.position[0][0] - 0.5 * self.wheelbase[0] * np.cos(np.deg2rad(rotation)),
+                self.position[0][1] + 0.5 * self.wheelbase[0] * np.sin(np.deg2rad(-rotation))]
             ), 
             np.array([0.02, 0.03]), 
-            self.rotation,
+            -rotation,
             (255, 0, 0)
         )
 
         # draw sensors
-        X = np.linspace(-self.sensor_width / 2, self.sensor_width / 2, self.sensor_n)
-        for num in X:
-            p = _rotate_point_around_center(self.position + np.array([num, self.lenght]), self.position, np.deg2rad(-self.rotation))
+        pos = self.get_sensor_positions()
+        for p in pos:
             graphic_engine.draw_rectangle(
                 p, 
                 np.array([0.01, 0.01]), 
-                self.rotation,
+                np.rad2deg(rotation),
                 (64, 64, 255)
             )
-
- 
-def _rotate_point_around_center(point, center, angle):
-    # Calculate the vector from center to point
-    delta = point - center
-    
-    # Calculate the rotation matrix
-    rotation_matrix = np.array([[np.cos(angle), -np.sin(angle)],
-                                [np.sin(angle), np.cos(angle)]])
-    
-    # Perform the rotation on the delta vector
-    rotated_delta = np.dot(rotation_matrix, delta)
-    
-    # Calculate the new position by adding the rotated delta to the center
-    rotated_point = rotated_delta + center
-    
-    return rotated_point
 
 
 if __name__ == "__main__":
@@ -184,7 +175,7 @@ if __name__ == "__main__":
         wheelbase=[0.2, 0.2],
         lenght=[0.14, 0.2],
         engine_cutoff=0.005,
-        rotation=0.0,
+        rotation=np.pi/2,
         sensor_width=[0.1, 0.05],
         sensor_n=8,
         sensor_noise=0.0,
@@ -199,6 +190,10 @@ if __name__ == "__main__":
         t.add_segment("straight")
 
     t.finalize(10)
-    
+    for _ in range(90):
+        r.move([0.0, 0.0], [0.3, 0.0], 1/100)
     # t.show_track()
+        
+    print(r.position)
+    print(r.rotation)
     print(r.get_sensors(t))

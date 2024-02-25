@@ -25,19 +25,3 @@ def reproduce(gens1: np.array, gens2: np.array, children_n: int, mutation_rate: 
     
     return result
 
-def get_next_generation(gens1: np.array, gens2: np.array, score_func, children_n: int, mutation_rate=1e-2):
-    children = reproduce(gens1, gens2, children_n, mutation_rate)
-    top = [0, gens1, 0, gens2]
-
-    for child in children:
-        score = score_func(child)
-
-        worst_top = 2
-        if top[0] < top[2]:
-            worst_top = 0
-
-        if score > top[worst_top]:
-            top[worst_top] = score
-            top[worst_top + 1] = child
-
-    return top

@@ -163,3 +163,73 @@ class RobotController4:
         
     def __repr__(self):
         return f"genotype: {self.genotype}"
+    
+
+class RobotController5:
+    def __init__(self, genotype: np.array):
+        '''
+        genotype: all data needed to describe controller behaviour, stored as 1D array
+        '''
+        self.nn = NeuralNetwok(np.array([12, 10, 8, 6]), genotype)
+
+        self.mem = np.zeros(4)
+        
+    def get_motors(self, inputs):
+        inputs = np.concatenate((inputs, self.mem))
+        inputs = self.nn.forward(inputs)
+        self.mem = inputs[2:]
+        return inputs[0], inputs[1]
+        
+    def __repr__(self):
+        return f"genotype: {self.genotype}"
+    
+
+class NeuralNetwok_batch:
+    def __init__(self, shape: np.array, genotype: np.array):
+        self.activation = np.tanh
+        self.w = []
+        self.genotype = genotype
+
+
+        parameters_n = 0
+        for i in range(len(shape) - 1):
+            parameters_n += shape[i] * shape[i+1]
+            parameters_n += shape[i+1]
+
+        assert len(self.genotype) == parameters_n, f"genotype: {len(self.genotype)}, parameters: {parameters_n}"
+            
+        for i in range(len(shape) - 1):
+            self.w.append(genotype[:shape[i] * shape[i+1]].reshape(shape[i + 1], shape[i]))
+            genotype = genotype[shape[i] * shape[i+1]:]
+
+            self.w.append(genotype[:shape[i+1]])
+            self.w[-1] = self.w[-1].reshape(shape[i+1], 1)
+            genotype = genotype[shape[i+1]:]
+
+        
+    def forward(self, inputs):
+        inputs = inputs.reshape(1, -1).T
+        for i in range(0, len(self.w), 2):
+            inputs = self.w[i] @ inputs
+            inputs += self.w[i + 1]
+            inputs = self.activation(inputs)
+        
+        inputs = np.clip(inputs, -1, 1)
+        return inputs.T[0]
+class RobotController4_batch:
+    def __init__(self, genotype: np.array):
+        '''
+        genotype: all data needed to describe controller behaviour, stored as 1D array
+        '''
+        self.nn = NeuralNetwok(np.array([10, 8, 6, 4]), genotype)
+
+        self.mem = np.zeros(2)
+        
+    def get_motors(self, inputs):
+        inputs = np.concatenate((inputs, self.mem))
+        inputs = self.nn.forward(inputs)
+        self.mem = inputs[2:]
+        return inputs[0], inputs[1]
+        
+    def __repr__(self):
+        return f"genotype: {self.genotype}"
