@@ -20,7 +20,7 @@ t.finalize(128)
 # plt.plot(t.chain[:, 0], t.chain[:, 1])
 # plt.show()
 
-N = 275
+N = 173
 parent1 = np.random.randn(N)
 parent2 = np.random.randn(N)
 dt = 1/200
@@ -33,11 +33,11 @@ while 2137:
     children = reproduce(parent1, parent2, N, N**-0.5)
     robots = robot.Robot(
         max_motor_speed=1.0,
-        wheelbase=0.2 + 0.0 * children[:, 272],
-        lenght=0.14 + 0.0 * children[:, 273],
-        engine_cutoff=0.05,
+        wheelbase=0.2 + 0.0 * children[:, 170],
+        lenght=0.14 + 0.0 * children[:, 171],
+        engine_cutoff=0.1,
         rotation=np.pi/2,
-        sensor_width=0.067 + 0.0 * children[:, 274],
+        sensor_width=0.067 + 0.0 * children[:, 172],
         sensor_n=8,
         sensor_noise=0.1,
         sensor_radius=0.005,
@@ -46,7 +46,7 @@ while 2137:
         track_width=0.02
     )
 
-    c = [robot_controller.RobotController5(child) for child in children[:, :272]]
+    c = [robot_controller.RobotController4(child) for child in children[:, :170]]
 
     for _ in np.arange(0, sim_time, dt):
         readings = robots.get_sensors(t)
