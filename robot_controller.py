@@ -188,7 +188,6 @@ class NeuralNetwok_batch:
     def __init__(self, shape: np.array, genotype: np.array):
         self.activation = np.tanh
         self.w = []
-        self.genotype = genotype
 
 
         parameters_n = 0
@@ -196,7 +195,7 @@ class NeuralNetwok_batch:
             parameters_n += shape[i] * shape[i+1]
             parameters_n += shape[i+1]
 
-        assert len(self.genotype) == parameters_n, f"genotype: {len(self.genotype)}, parameters: {parameters_n}"
+        assert len(genotype) == parameters_n, f"genotype: {len(genotype)}, parameters: {parameters_n}"
             
         for i in range(len(shape) - 1):
             self.w.append(genotype[:shape[i] * shape[i+1]].reshape(shape[i + 1], shape[i]))
@@ -216,20 +215,56 @@ class NeuralNetwok_batch:
         
         inputs = np.clip(inputs, -1, 1)
         return inputs.T[0]
+
 class RobotController4_batch:
     def __init__(self, genotype: np.array):
         '''
         genotype: all data needed to describe controller behaviour, stored as 1D array
         '''
-        self.nn = NeuralNetwok(np.array([10, 8, 6, 4]), genotype)
+        self.W1 = genotype[:, 0:10*8].reshape(-1, 8, 10)
+        genotype = genotype[:, 10*8:]
 
-        self.mem = np.zeros(2)
+        self.B1 = genotype[:, 0:8].reshape(-1, 8)
+        genotype = genotype[:, 8:]
+
+        self.W2 = genotype[:, 0:8*6].reshape(-1, 6, 8)
+        genotype = genotype[:, 8*6:]
+
+        self.B2 = genotype[:, 0:6].reshape(-1, 6)
+        genotype = genotype[:, 6:]
+
+        self.W3 = genotype[:, 0:6*4].reshape(-1, 4, 6)
+        genotype = genotype[:, 6*4:]
+
+        self.B3 = genotype[:, 0:4].reshape(-1, 4)
+
+        self.mem = np.zeros((1, 2))
+
+        self.activation = np.tanh
         
     def get_motors(self, inputs):
-        inputs = np.concatenate((inputs, self.mem))
-        inputs = self.nn.forward(inputs)
-        self.mem = inputs[2:]
-        return inputs[0], inputs[1]
-        
-    def __repr__(self):
-        return f"genotype: {self.genotype}"
+        inputs = np.concatenate((inputs, self.mem), axis=1)
+
+        print(self.W1.shape, inputs.shape)
+        inputs = np.einsum('ijk,ik->ij', self.W1, inputs) + self.B1
+        inputs = self.activation(inputs)
+
+        inputs = np.einsum('ijk,ik->ij', self.W2, inputs) + self.B2
+        inputs = self.activation(inputs)
+
+        inputs = np.einsum('ijk,ik->ij', self.W3, inputs) + self.B3
+        inputs = self.activation(inputs)
+
+        self.mem = inputs[:, 2:]
+        return inputs[:, 0], inputs[:, 1]
+    
+
+
+if __name__ == "__main__":
+    genotype = np.random.randn(1, 170)
+    inputs = np.random.randn(1, 8)
+
+    c = RobotController4_batch(genotype)
+    c2 = RobotController4(genotype[0])
+    print(c.get_motors(inputs))
+    print(c2.get_motors(inputs[0]))
