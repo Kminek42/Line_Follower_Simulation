@@ -93,8 +93,8 @@ class Robot:
         self.position += translation * dt
         self.rotation += w * dt
 
-        self.mileage += (self.m1_v + self.m2_v) / 2 * dt
-        return (self.m1_v + self.m2_v) / 2
+        self.mileage += V * dt
+        return V
 
     def get_sensor_positions(self):
         X = np.repeat(self.lenght, self.sensor_n)
