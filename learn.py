@@ -20,13 +20,14 @@ t.finalize(128)
 # plt.plot(t.chain[:, 0], t.chain[:, 1])
 # plt.show()
 
-child_n = 64
-mutation_rate = 1/16
+child_n = 256
+mutation_rate = 1/128
 parents = np.random.randn(child_n, 170)
 scores = np.random.rand(child_n, )
 dt = 1/200
 i = 0
-sim_time = 6
+sim_time = 10
+Y = []
 while 2137:
     t0 = time()
     i += 1
@@ -68,6 +69,8 @@ while 2137:
     if robots.mileage[id[0]] / sim_time > 0.7 and sim_time < 20:
         sim_time += 1
     
+    Y.append(robots.mileage[id[0]] / sim_time)
+    np.savetxt('Evolution.csv', Y)
     save_genotype(parents[0], 'genotype.txt')
 
     print()
