@@ -6,13 +6,16 @@ import numpy as np
 from time import time
 import matplotlib.pyplot as plt
 
-np.random.seed(0)
-
 t = track.Track()
 t.add_segment("straight")
 t.add_segment('90_left')
 t.add_segment('straight')
 t.add_segment('90_right')
+t.add_segment("straight")
+t.add_segment('90_left')
+t.add_segment('straight')
+t.add_segment('90_right')
+
 for _ in range(160):
     t.add_segment("")
 t.finalize(128)
@@ -26,7 +29,7 @@ parents = np.random.randn(child_n, 170)
 scores = np.random.rand(child_n, )
 dt = 1/200
 i = 0
-sim_time = 10
+sim_time = 20
 Y = []
 while 2137:
     t0 = time()
