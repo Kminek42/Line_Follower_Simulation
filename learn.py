@@ -27,7 +27,12 @@ t.finalize(128)
 # plt.show()
 
 child_n = 64
-mutation_rate = 1/16
+mutation_rate = 1/32
+steps = 8
+alpha = 1.1
+best = 0
+current_steps = 0
+
 parents = np.random.randn(child_n, 170)
 scores = np.random.rand(child_n, )
 dt = 1/200
@@ -48,7 +53,7 @@ while 2137:
         rotation=np.pi/2,
         sensor_width=[0.067] * child_n,
         sensor_n=8,
-        sensor_noise=0.0,
+        sensor_noise=0.1,
         sensor_radius=0.005,
         min_speed=0.1,
         position=[0.0, 0.0],
@@ -70,7 +75,15 @@ while 2137:
     id = np.argsort(-robots.mileage)
     parents = children[id]
     scores = robots.mileage[id]
-    print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, best specimen's average speed: {np.round(scores[0] / sim_time, 2)} m/s, sim time: {sim_time}s")
+    if np.round(scores[0] / sim_time, 2) > best:
+        best = np.round(scores[0] / sim_time, 2)
+        current_steps = 0
+    else:
+        current_steps += 1
+        if current_steps == steps:
+            mutation_rate *= alpha
+    
+    print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, mutation rate: {mutation_rate}, best specimen's average speed: {np.round(scores[0] / sim_time, 2)} m/s, sim time: {sim_time}s")
 
     if robots.mileage[id[0]] / sim_time > 0.7 and sim_time < 20:
         sim_time += 1
