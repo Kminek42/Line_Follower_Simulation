@@ -6,7 +6,7 @@ class Robot:
     def __init__(self, *,
                  max_motor_speed, 
                  wheelbase, 
-                 engine_cutoff, 
+                 engine_acceleration, 
                  lenght, 
                  position, 
                  rotation, 
@@ -35,7 +35,7 @@ class Robot:
 
         assert isinstance(max_motor_speed, float)
         assert isinstance(sensor_noise, float)
-        assert isinstance(engine_cutoff, float)
+        assert isinstance(engine_acceleration, float)
         assert isinstance(min_speed, float)
         assert isinstance(sensor_radius, float)
         assert isinstance(track_width, float)
@@ -49,7 +49,7 @@ class Robot:
         self.lenght = lenght
 
         self.max_motor_speed = max_motor_speed
-        self.cutoff = engine_cutoff
+        self.acceleration = engine_acceleration
         self.min_speed = min_speed
 
         self.sensor_n = sensor_n
@@ -70,9 +70,9 @@ class Robot:
         motor_r = np.clip(motor_r, -1, 1)
         
         # apply inertia
-        self.m1_v += self.cutoff * (motor_l - self.m1_v)
-        self.m2_v += self.cutoff * (motor_r - self.m2_v)
-
+        self.m1_v += self.acceleration * np.clip((motor_l - self.m1_v) / dt, -1, 1) * dt
+        self.m2_v += self.acceleration * np.clip((motor_r - self.m2_v) / dt, -1, 1) * dt
+        
         # apply speed
         motor_l = self.max_motor_speed * self.m1_v
         motor_r = self.max_motor_speed * self.m2_v
@@ -84,7 +84,7 @@ class Robot:
         # move robot
         V = (motor_r + motor_l) / 2
         w = (motor_r - motor_l) / self.wheelbase
-
+        
         translation = np.array([
             np.cos(self.rotation) * V,
             np.sin(self.rotation) * V
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         max_motor_speed=1.0,
         wheelbase=[0.2, 0.2],
         lenght=[0.14, 0.2],
-        engine_cutoff=0.005,
+        engine_acceleration=0.1,
         rotation=np.pi/2,
         sensor_width=[0.1, 0.05],
         sensor_n=8,
