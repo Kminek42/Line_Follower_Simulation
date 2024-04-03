@@ -18,7 +18,7 @@ Robot is controlled by RobotController class. It has neural network with 2 memor
 <h2>Learning</h2>
 Learning is implemented by a genetic algorithm that adjusts the weights of the neural network. Mutation rate is increasing gradually when the next generation is worse than previous. After training using train.py one can see progress by running 'python3 plot_evolution.py BestScore.csv MutationRate.csv'.<br><br>
 
-<img height="512" alt="image" src="https://github.com/Kminek42/Line_Follower_Simulation/assets/51884463/fbfd79ea-df19-4ab1-b328-bfa68316b78c">
+<img height="512" alt="image" src="https://github.com/Kminek42/Line_Follower_Simulation/assets/51884463/26a5a2d1-885f-46e8-8d52-c2fece8b4a71">
 
 Example of learning result.
 
