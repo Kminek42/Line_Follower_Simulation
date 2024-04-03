@@ -14,7 +14,7 @@ class GraphicEngine:
 
 
     def clear_screen(self):
-        self.screen.fill((0, 0, 0))
+        self.screen.fill((255, 255, 255))
 
     
     def draw_rectangle(self, position, size, rotation, color):
@@ -50,7 +50,7 @@ class GraphicEngine:
 
 
     def draw_track(self, track):
-        pygame.draw.lines(self.screen, color=(255, 200, 145), closed=False, points=self.euclid_to_pixels(track.chain), width=int(track.line_width * self.screen_res[1] / self.camera_FOV))
+        pygame.draw.lines(self.screen, color=(0, 0, 0), closed=False, points=self.euclid_to_pixels(track.chain), width=int(track.line_width * self.screen_res[1] / self.camera_FOV))
 
     def euclid_to_pixels(self, object_pos):
         # Shift object position relative to the camera

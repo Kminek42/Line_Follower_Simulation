@@ -74,7 +74,7 @@ running = True
 dt = 1/200
 
 while running:
-    screen.fill((0, 0, 0))
+    ge.clear_screen()
 
     # Event handling
     for event in pygame.event.get():
