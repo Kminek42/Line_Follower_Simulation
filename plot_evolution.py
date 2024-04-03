@@ -33,7 +33,6 @@ color = 'tab:red'
 ax2.set_ylabel('Mutation rate', color=color)
 ax2.plot(Y2, color=color)
 ax2.tick_params(axis='y', labelcolor=color)
-ax2.set_ylim(bottom=0)
 
 # Show plot
 plt.show()

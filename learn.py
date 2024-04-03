@@ -27,11 +27,11 @@ t.finalize(128)
 # plt.show()
 
 child_n = 64
-mutation_rate = 1/100
+mutation_rate = 1/1000
 min_distance = 0.1
 Y_mutation = []
 steps = 1
-alpha = 1.01
+alpha = 1.001
 best = 0
 current_steps = 0
 
@@ -89,10 +89,10 @@ while 2137:
         current_steps = 0
     else:
         current_steps += 1
-        if current_steps == steps:
+        if current_steps > steps:
             mutation_rate *= alpha
     
-    print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, mutation rate: {mutation_rate}, best specimen's average speed: {np.round(scores[0] / sim_time, 2)} m/s, sim time: {sim_time}s")
+    print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, mutation rate: {np.round(mutation_rate, 4)}, best specimen's average speed: {np.round(scores[0] / sim_time, 2)} m/s, sim time: {sim_time}s")
 
     Y.append(robots.mileage[id[0]] / sim_time)
     np.savetxt('BestScore.csv', Y)
