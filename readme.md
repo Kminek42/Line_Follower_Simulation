@@ -12,7 +12,7 @@ The `robot.py` file simulates a robot with two wheels. The Robot class is initia
 <img height="512" alt="image" src="https://github.com/Kminek42/Line_Follower_Simulation/assets/51884463/3d6bfc1f-6124-4bef-a8f9-f33819c7a48e">
 
 ## Learning
-Learning is done using a genetic algorithm that adjusts the neural network weights. The quality indicator of the genotype is the average speed at which the robot moved along the track. Turning around, turning at intersections, or leaving the track results in setting the average speed to 0. The mutation rate gradually increases when the next generation is worse than the previous one. After training using the train.py file, One can see progress by running `python3 plot_evolution.py BestScore.csv MutationRate.csv`.
+Learning is done using a genetic algorithm that adjusts the neural network weights. The quality indicator of the genotype is the average speed at which the robot moved along the track. Turning around, turning at intersections, or leaving the track results in setting the average speed to 0. The mutation rate gradually increases when the next generation is worse than the previous one. After training using the train.py file, One can see progress by running `python3 plot_evolution.py BestScore.csv AverageScore.csv MutationRate.csv`.
 <img height="512" alt="image" src="https://github.com/Kminek42/Line_Follower_Simulation/assets/51884463/4c1fbda4-f3f7-4cdd-88cb-a1372a1b7cf4">
 
 An example of learning outcome. Despite preserving two individuals from the previous generation, sometimes the result of the next generation worsens. This is due to the added noise to the readings, which introduces some randomness into the simulation.
