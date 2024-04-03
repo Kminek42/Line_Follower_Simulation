@@ -40,7 +40,9 @@ scores = np.random.rand(child_n, )
 dt = 1/200
 i = 0
 sim_time = 10
-Y = []
+best_scores = []
+average_scores = []
+
 while 2137:
     t0 = time()
     i += 1
@@ -76,6 +78,8 @@ while 2137:
         robots.mileage[robots.rotation > np.deg2rad(210)] = -np.inf
         robots.mileage[robots.rotation < np.deg2rad(-30)] = -np.inf
         
+    robots.mileage[robots.mileage < 1e-3] = 1e-3
+    
     # sort by score ------------------------------------------------------------
     id = np.argsort(-robots.mileage)
     parents = children[id]
@@ -94,8 +98,10 @@ while 2137:
     
     print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, mutation rate: {np.round(mutation_rate, 4)}, best specimen's average speed: {np.round(scores[0] / sim_time, 2)} m/s, sim time: {sim_time}s")
 
-    Y.append(robots.mileage[id[0]] / sim_time)
-    np.savetxt('BestScore.csv', Y)
+    best_scores.append(scores[0] / sim_time)
+    np.savetxt('BestScore.csv', best_scores)
+    average_scores.append(np.mean(scores) / sim_time)
+    np.savetxt('AverageScore.csv', average_scores)
 
     # increase simulation time for longer, more difficult to complete track ----
     if robots.mileage[id[0]] / sim_time > 0.7 and sim_time < 20:
