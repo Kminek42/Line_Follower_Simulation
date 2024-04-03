@@ -15,7 +15,8 @@ Robot is controlled by RobotController class. It has neural network with 2 memor
 <h2>Learning</h2>
 Learning is implemented by a genetic algorithm that adjusts the weights of the neural network. After training using train.py one can see progress by running 'python3 plot_evolution.py BestScore.csv MutationRate.csv'. 
 
-<img width="512" alt="image" src="https://github.com/Kminek42/Line_Follower_Simulation/assets/51884463/cad1b67c-3110-41f0-a8bd-136b1ffea1de">
+<img width="854" alt="image" src="https://github.com/Kminek42/Line_Follower_Simulation/assets/51884463/fbfd79ea-df19-4ab1-b328-bfa68316b78c">
+
 Example of learning result.
 
 learn.py also creates genotype.txt file which can be pasted into main.py file.
