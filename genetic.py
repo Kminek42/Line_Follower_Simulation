@@ -5,26 +5,6 @@ def save_genotype(genotype, filename):
     file.write(f"genotype = np.{repr(genotype)}\n\n")
     file.close()
 
-def reproduce(gens1: np.array, gens2: np.array, children_n: int, mutation_rate: float):
-    """
-    Reproduce gens by performing crossover and random mutation
-    """
-
-    # Broadcasting to create n copies of each array
-    copies_arr1 = np.tile(gens1, (children_n - 2, 1))
-    copies_arr2 = np.tile(gens2, (children_n - 2, 1))
-    
-    # Generating random crossover indices
-    crossover_points = np.random.randint(1, len(gens1), size=(children_n - 2, 1))
-    
-    # Perform crossover using boolean indexing
-    result = np.where(np.arange(len(gens1)) < crossover_points, copies_arr1, copies_arr2)
-
-    result = np.where(np.random.random(result.shape) > mutation_rate, result, np.random.randn(*result.shape))
-    result = np.vstack((gens1, gens2, result))
-    
-    return result
-
 def mating(gens1, gens2, mutation_rate):
     crossover_point = np.random.randint(1, len(gens1))
     result = np.where(np.arange(len(gens1)) < crossover_point, gens1, gens2)
@@ -32,10 +12,18 @@ def mating(gens1, gens2, mutation_rate):
     return result
 
 
-def reproduce2(parents, scores, children_n, mutation_rate):
+def reproduce2(parents: np.array, scores: np.array, children_n: int, mutation_rate: float, min_distance: float):
+    '''
+    parents: parents' genotype
+    scores: parents' scores
+    children_n: number of new children
+    mutation_rate: rate of the random mutation in genotype
+    min_distance: distance added to score, so everyone can have non-zero chance to reproduce
+    '''
     parents = np.array(parents)
-    output = [parents[0], parents[1]]
-    scores[scores == -np.Inf] = 1e-3
+    output = [parents[0], parents[1]]  # elitism
+    scores[scores < 1e-3] = 1e-3
+    scores += min_distance
     scores /= scores.sum()
     for _ in range(children_n-2):
         p1, p2 = np.random.choice(np.arange(len(parents)), size=(2, ), p=scores)
