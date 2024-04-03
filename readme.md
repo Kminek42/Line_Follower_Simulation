@@ -23,3 +23,5 @@ learn.py also creates genotype.txt file which can be pasted into main.py file.
 
 
 Run main.py file to see the simulation with trained NN.
+
+<img height="512" alt="image" src="https://github.com/Kminek42/Line_Follower_Simulation/assets/51884463/669ee7f7-1a69-4d30-a10b-328897254e98">
