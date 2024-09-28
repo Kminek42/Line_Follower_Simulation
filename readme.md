@@ -3,6 +3,12 @@
 I created this simulation to train a recursive neural network controlling a line-following robot.
 All elements in this simulation operate as vector operations, allowing the use of optimizations from the numpy library.
 
+## How to run
+
+Before you start:
+
+run `pip3 install -r requirements.txt` command in terminal to instll all necessary libraries.
+
 ## Track
 The `track.py` file generates the track procedurally. One can run `python3 track.py` to see different results. The Track class has a `distance_to_chain` method that returns the distance between any point and the track.
 <img height="512" alt="Screenshot 2024-04-03 at 08 26 29" src="https://github.com/Kminek42/Line_Follower_Simulation/assets/51884463/93e219be-d0eb-406a-ac07-843c5c2c9349">
