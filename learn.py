@@ -1,10 +1,10 @@
 import robot
 import track
-import robot_controller
 from genetic import reproduce2, save_genotype
 import numpy as np
 from time import time
 import matplotlib.pyplot as plt
+import robot_controller
 
 np.random.seed(42)
 np.set_printoptions(suppress=True)
@@ -27,7 +27,7 @@ t.finalize(128)
 # plt.show()
 
 child_n = 64
-mutation_rate = 1/1000
+mutation_rate = 1/100
 min_distance = 0.1
 Y_mutation = []
 steps = 1
@@ -39,7 +39,7 @@ parents = np.random.randn(child_n, 170)
 scores = np.random.rand(child_n, )
 dt = 1/200
 i = 0
-sim_time = 10
+sim_time = 5
 best_scores = []
 average_scores = []
 
@@ -66,12 +66,12 @@ while 2137:
     )
 
     # c = [robot_controller.RobotController4(child) for child in children[:, :170]]
-    c = robot_controller.RobotController4_batch(children[:, :170])
+    c = robot_controller.RobotController(np.array([10, 8, 6, 4]), children, 2)
 
     # simulation ---------------------------------------------------------------
     for _ in np.arange(0, sim_time, dt):
         readings = robots.get_sensors(t)
-        controls = c.get_motors(readings)
+        controls = c.get_motors(readings).T
         robots.move(controls[0], controls[1], dt)
         robots.mileage[robots.get_distance(t) > 0.2] = -np.inf
         robots.mileage[robots.mileage < 0] = -np.inf
