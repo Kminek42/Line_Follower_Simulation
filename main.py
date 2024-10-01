@@ -44,7 +44,7 @@ genotype = np.array([ 0.0991,  1.7118,  0.5838, -2.0967,  2.1391, -0.2988, -0.35
        -0.1365,  0.5402])
 
 
-c = robot_controller.RobotController(genotype[:170])
+c = robot_controller.RobotController(np.array([10, 8, 6, 4]), genotype[:170].reshape(1, -1), 2)
 
 N=1
 r = robot.Robot(
@@ -81,12 +81,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    sensors = np.array(r.get_sensors(t)[0])
-    inputs = np.array(sensors)
-    e1, e2 = c.get_motors(inputs)
-    # print(sensors)
-    r.move([e1], [e2], dt)
-    # print(np.round(sensors, 2))
+    sensors = r.get_sensors(t)
+    print(sensors)
+    r.move(c.get_motors(sensors), dt)
     ge.draw_track(t)
     r.draw(ge)
     pygame.display.flip()
