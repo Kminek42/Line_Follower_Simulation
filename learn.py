@@ -26,7 +26,7 @@ t.finalize(128)
 # plt.plot(t.chain[:, 0], t.chain[:, 1])
 # plt.show()
 
-child_n = 64
+child_n = 128
 mutation_rate = 1/100
 min_distance = 0.1
 Y_mutation = []
@@ -71,8 +71,8 @@ while 2137:
     # simulation ---------------------------------------------------------------
     for _ in np.arange(0, sim_time, dt):
         readings = robots.get_sensors(t)
-        controls = c.get_motors(readings).T
-        robots.move(controls[0], controls[1], dt)
+        controls = c.get_motors(readings)
+        robots.move(controls, dt)
         robots.mileage[robots.get_distance(t) > 0.2] = -np.inf
         robots.mileage[robots.mileage < 0] = -np.inf
         robots.mileage[robots.rotation > np.deg2rad(210)] = -np.inf

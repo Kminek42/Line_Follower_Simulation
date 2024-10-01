@@ -3,19 +3,22 @@ import matplotlib.pyplot as plt
 import track
 
 class Robot:
-    def __init__(self, *,
-                 max_motor_speed, 
-                 wheelbase, 
-                 engine_acceleration, 
-                 lenght, 
-                 position, 
-                 rotation, 
-                 sensor_width, 
-                 sensor_n, 
-                 sensor_noise,
-                 min_speed,
-                 sensor_radius,
-                 track_width):
+    def __init__(
+        self, 
+        *,
+        max_motor_speed, 
+        wheelbase, 
+        engine_acceleration, 
+        lenght, 
+        position, 
+        rotation, 
+        sensor_width, 
+        sensor_n, 
+        sensor_noise,
+        min_speed,
+        sensor_radius,
+        track_width
+    ):
 
         wheelbase = np.array(wheelbase)
         position = np.array(position)
@@ -64,7 +67,13 @@ class Robot:
         self.mileage = np.zeros((self.robot_n, ))
 
 
-    def move(self, motor_l, motor_r, dt):
+    def move(self, motors, dt):
+        assert motors.ndim == 2, 'Inputs must be a 2D array (batch_n, 2).'
+        assert motors.shape[0] == self.robot_n, 'Inputs must have same batch size.'
+        assert motors.shape[1] == 2, 'Inputs must have 2 columns (left and right motors).'
+        
+        motor_l, motor_r = motors[:, 0], motors[:, 1]
+        
         # limit input
         motor_l = np.clip(motor_l, -1, 1)
         motor_r = np.clip(motor_r, -1, 1)
