@@ -87,7 +87,7 @@ while 2137:
 
     # update mutation rate -----------------------------------------------------
     Y_mutation.append(mutation_rate)
-    np.savetxt('MutationRate.csv', Y_mutation)
+    np.savetxt('../output-data/MutationRate.csv', Y_mutation)
     if np.round(scores[0] / sim_time, 2) > best:
         best = np.round(scores[0] / sim_time, 2)
         current_steps = 0
@@ -99,12 +99,12 @@ while 2137:
     print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, mutation rate: {np.round(mutation_rate, 4)}, best specimen's average speed: {np.round(scores[0] / sim_time, 2)} m/s, sim time: {sim_time}s")
 
     best_scores.append(scores[0] / sim_time)
-    np.savetxt('BestScore.csv', best_scores)
+    np.savetxt('../output-data/BestScore.csv', best_scores)
     average_scores.append(np.mean(scores) / sim_time)
-    np.savetxt('AverageScore.csv', average_scores)
+    np.savetxt('../output-data/AverageScore.csv', average_scores)
 
     # increase simulation time for longer, more difficult to complete track ----
     if robots.mileage[id[0]] / sim_time > 0.7 and sim_time < 20:
         sim_time += 1
     
-    save_genotype(parents[0], 'genotype.txt')
+    save_genotype(parents[0], '../output-data/genotype.txt')
