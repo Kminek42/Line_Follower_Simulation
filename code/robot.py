@@ -6,93 +6,77 @@ class Robot:
     def __init__(
         self, 
         *,
-        max_motor_speed, 
-        wheelbase, 
-        engine_acceleration, 
-        lenght, 
-        position, 
-        rotation, 
-        sensor_width, 
-        sensor_n, 
-        sensor_noise,
-        min_speed,
-        sensor_radius,
-        track_width
+        number_of_robots: int,
+        
+        max_acceleration: float,
+        max_speed: float,
+        acceleration_coefficient: float,
+        
+        wheelbase: float, 
+        
+        position: list[float, float], 
+        rotation: float, 
+        sensor_positions: np.array,
+        sensor_noise: float,
+        sensor_radius: float,
+        track_width: float
     ):
+        assert isinstance(number_of_robots, int) and number_of_robots > 0, "number_of_robots must be positive integer."
+        
+        assert isinstance(max_acceleration, float) and max_acceleration > 0, "max_acceleration must be positive number."
+        assert isinstance(max_speed, float) and max_speed > 0, "max_speed must be positive number."
+        assert isinstance(acceleration_coefficient, float) and acceleration_coefficient > 0, "acceleration_coefficient must be positive number."
+        
+        assert isinstance(wheelbase, float) and wheelbase > 0, "wheelbase must be positive number."
+        
+        assert isinstance(position, list) and len(position) == 2, "position must be list with X and Y coordinate."
+        assert isinstance(rotation, float) and 0 <= rotation <= 2*np.pi, "rotation must be number in range [0, 2*pi]."
+        
+        assert isinstance(sensor_positions, np.ndarray) and sensor_positions.shape[1] == 2, "sensor_positions must be list of X and Y coordinates."
+        assert isinstance(sensor_noise, float) and 0 <= sensor_noise <= 1, "sensor_noise must be number in range [0, 2*pi]."
+        assert isinstance(sensor_radius, float) and sensor_radius > 0, "sensor_radius must be positive number."
+        assert isinstance(track_width, float) and track_width > 0, "track_width must be positive number."
 
-        wheelbase = np.array(wheelbase)
-        position = np.array(position)
-        lenght = np.array(lenght)
-        sensor_width = np.array(sensor_width)
-
-        assert wheelbase.ndim == 1
-        assert wheelbase.all() > 0
-
-        assert lenght.ndim == 1
-        assert lenght.all() > 0
-
-        assert sensor_width.ndim == 1
-        assert sensor_width.all() > 0
-
-        assert position.shape == (2, )
-
-        assert isinstance(max_motor_speed, float)
-        assert isinstance(sensor_noise, float)
-        assert isinstance(engine_acceleration, float)
-        assert isinstance(min_speed, float)
-        assert isinstance(sensor_radius, float)
-        assert isinstance(track_width, float)
-
-        self.robot_n = wheelbase.shape[0]
-
-        self.position = np.tile(position, (self.robot_n, )).reshape((-1, 2))
-        self.rotation = np.array(rotation).repeat(self.robot_n, axis=0)
-
+        self.number_of_robots = number_of_robots
+        
+        self.max_acceleration = max_acceleration
+        self.max_speed = max_speed
+        self.acceleration_coefficient = acceleration_coefficient
+        
         self.wheelbase = wheelbase
-        self.lenght = lenght
-
-        self.max_motor_speed = max_motor_speed
-        self.acceleration = engine_acceleration
-        self.min_speed = min_speed
-
-        self.sensor_n = sensor_n
-        self.sensor_width = sensor_width
+        
+        self.position = np.array(position).reshape(1, -1).repeat(number_of_robots, 0)
+        self.rotation = np.array([rotation]).repeat(number_of_robots, 0)
+        
+        self.sensor_positions = sensor_positions
         self.sensor_noise = sensor_noise
         self.sensor_radius = sensor_radius
         self.track_width = track_width
-
-        self.m1_v = 0
-        self.m2_v = 0
-
-        self.mileage = np.zeros((self.robot_n, ))
-
-
-    def move(self, motors, dt):
-        assert motors.ndim == 2, 'Inputs must be a 2D array (batch_n, 2).'
-        assert motors.shape[0] == self.robot_n, 'Inputs must have same batch size.'
-        assert motors.shape[1] == 2, 'Inputs must have 2 columns (left and right motors).'
         
-        motor_l, motor_r = motors[:, 0], motors[:, 1]
-        
-        # limit input
-        motor_l = np.clip(motor_l, -1, 1)
-        motor_r = np.clip(motor_r, -1, 1)
-        
-        # apply inertia
-        self.m1_v += self.acceleration * np.clip((motor_l - self.m1_v) / dt, -1, 1) * dt
-        self.m2_v += self.acceleration * np.clip((motor_r - self.m2_v) / dt, -1, 1) * dt
-        
-        # apply speed
-        motor_l = self.max_motor_speed * self.m1_v
-        motor_r = self.max_motor_speed * self.m2_v
+        self.motor_speed = np.zeros((self.number_of_robots, 2))
 
-        # apply friction
-        motor_l[np.abs(motor_l) < self.min_speed] = 0
-        motor_r[np.abs(motor_r) < self.min_speed] = 0
+        self.distance_traveled = np.zeros((self.number_of_robots, ))
+
+
+    def move(self, target_motor_speed, dt):
+        assert target_motor_speed.ndim == 2, 'Inputs must be a 2D array (batch_n, 2).'
+        assert target_motor_speed.shape[0] == self.number_of_robots, 'Inputs must have same batch size.'
+        assert target_motor_speed.shape[1] == 2, 'Inputs must have 2 columns (left and right target_motor_speed).'
+        
+        non_zero_sign = lambda x: 2 * (x >= 0) - 1
+        
+        # forward acceleration in limited by acceleration curve, breaking is limited by max acceleration
+        target_acceleration = (target_motor_speed * self.max_speed - self.motor_speed) * self.acceleration_coefficient
+        acceleration_limit = self.max_acceleration * (1 - self.motor_speed / self.max_speed)
+        acceleration = target_acceleration * non_zero_sign(self.motor_speed)
+        acceleration = np.maximum(-self.max_acceleration, np.minimum(acceleration, acceleration_limit))
+        acceleration = acceleration * non_zero_sign(self.motor_speed)
+        print(f'Acceleration: {acceleration}')
+        self.motor_speed += acceleration * dt
 
         # move robot
-        V = (motor_r + motor_l) / 2
-        w = (motor_r - motor_l) / self.wheelbase
+        V = self.motor_speed.mean(axis=1)
+        w = (self.motor_speed[:, 1] - self.motor_speed[:, 0]) / self.wheelbase
         
         translation = np.array([
             np.cos(self.rotation) * V,
@@ -102,21 +86,15 @@ class Robot:
         self.position += translation * dt
         self.rotation += w * dt
 
-        self.mileage += V * dt
+        self.distance_traveled += V * dt
         return V
 
     def get_sensor_positions(self):
-        X = np.repeat(self.lenght, self.sensor_n)
-
-        Y = np.linspace(self.sensor_width / 2, -self.sensor_width / 2, self.sensor_n).T.reshape((-1))
-
-        angle = np.repeat(self.rotation, self.sensor_n)
-
-        x_rotated = X * np.cos(angle) - Y * np.sin(angle)
-        y_rotated = X * np.sin(angle) + Y * np.cos(angle)
-
-        positions = np.stack((x_rotated, y_rotated), axis=1)
-        positions += np.repeat(self.position, self.sensor_n, axis=0)
+        rot_matrix = np.array([
+            [np.cos(self.rotation), -np.sin(self.rotation)],
+            [np.sin(self.rotation), np.cos(self.rotation)]
+        ])
+        positions = np.einsum('mnr, sn -> rsm', rot_matrix, self.sensor_positions).reshape(-1, 2)
 
         return positions
 
@@ -126,10 +104,10 @@ class Robot:
         readings = track.distance_to_chain(positions)
         readings = (self.sensor_radius + self.track_width / 2 - readings) / self.sensor_radius
         readings = np.clip(readings, 0.0, 1.0)
-        readings += self.sensor_noise * np.random.randn(self.robot_n * self.sensor_n)
+        # readings += self.sensor_noise * np.random.randn(self.number_of_robots * len(self.sensor_positions))
         readings = np.clip(readings, 0.0, 1.0)
 
-        return readings.reshape(self.robot_n, self.sensor_n)
+        return readings.reshape(self.number_of_robots, len(self.sensor_positions))
     
     def get_distance(self, track: track.Track):
         '''Returns the distance from robot to the track'''
@@ -181,17 +159,16 @@ class Robot:
 
 if __name__ == "__main__":
     r = Robot(
-        max_motor_speed=1.0,
-        wheelbase=[0.2, 0.2],
-        lenght=[0.14, 0.2],
-        engine_acceleration=0.1,
-        rotation=np.pi/2,
-        sensor_width=[0.1, 0.05],
-        sensor_n=8,
+        number_of_robots=1,
+        max_acceleration=1.0,
+        max_speed=1.0,
+        acceleration_coefficient=1.0,
+        wheelbase=0.2,
+        position=[0.0, 0.0],
+        rotation=0.0,
+        sensor_positions=np.array([[-0.01, 0.2], [0.0, 0.2], [0.01, 0.2]]),
         sensor_noise=0.0,
         sensor_radius=0.005,
-        min_speed=0.1,
-        position=[0.0, 0.0],
         track_width=0.018
     )
     
@@ -201,8 +178,13 @@ if __name__ == "__main__":
 
     t.finalize(10)
     for _ in range(90):
-        r.move([0.0, 0.0], [0.3, 0.0], 1/100)
-    # t.show_track()
+        r.move(np.array([
+            [1, 1],
+        ]), dt=1e-2)
+    for _ in range(90):
+        r.move(np.array([
+            [-1, -1],
+        ]), dt=1e-2)
         
     print(r.position)
     print(r.rotation)
