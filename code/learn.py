@@ -35,7 +35,7 @@ alpha = 1.001
 best = 0
 current_steps = 0
 
-parents = np.random.randn(child_n, 154)
+parents = np.random.randn(child_n, 170)
 scores = np.random.rand(child_n, )
 dt = 1/200
 i = 0
@@ -52,27 +52,35 @@ while 2137:
     children = np.round(children, 4)
     robots = robot.Robot(
     number_of_robots=child_n,
-    max_acceleration=6.0,
+    max_acceleration=10.0,
     max_speed=1.5,
     acceleration_coefficient=50.0,
     wheelbase=0.15,
     position=[0.0, 0.0],
     rotation=np.radians(90),
-    sensor_positions=np.array([[0.15, 0.04], [0.17, 0.02], [0.15, 0.01], [0.15, -0.01], [0.17, -0.02], [0.15, -0.04]]),
+    sensor_positions=np.array([0.15, 0]) + np.array([
+        [0.0, 0.03],
+        [0.0, 0.01],
+        [0.0, -0.01],
+        [0.0, -0.03],
+        [0.02, 0.03],
+        [0.02, 0.01],
+        [0.02, -0.01],
+        [0.02, -0.03],
+    ]),
     sensor_noise=0.0,
     sensor_radius=0.005,
     track_width=0.018
 )
 
-    # c = [robot_controller.RobotController4(child) for child in children[:, :170]]
-    c = robot_controller.RobotController(np.array([8, 8, 6, 4]), children, 2)
+    c = robot_controller.RobotController(np.array([10, 8, 6, 4]), children, 2)
 
     # simulation ---------------------------------------------------------------
     for _ in np.arange(0, sim_time, dt):
         readings = robots.get_sensors(t)
         controls = c.get_motors(readings)
         robots.move(controls, dt)
-        robots.distance_traveled[robots.get_distance(t) > 0.2] = -np.inf
+        robots.distance_traveled[robots.get_distance(t) > 0.25] = -np.inf
         robots.distance_traveled[robots.distance_traveled < 0] = -np.inf
         robots.distance_traveled[robots.rotation > np.deg2rad(210)] = -np.inf
         robots.distance_traveled[robots.rotation < np.deg2rad(-30)] = -np.inf
@@ -95,7 +103,7 @@ while 2137:
         if current_steps > steps:
             mutation_rate *= alpha
     
-    print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, mutation rate: {np.round(mutation_rate, 4)}, best specimen's average speed: {np.round(scores[0] / sim_time, 2)} m/s, sim time: {sim_time}s")
+    print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, mutation rate: {np.round(mutation_rate, 4)}, best specimen's average speed: {np.round(scores[0] / sim_time, 3)} m/s, sim time: {sim_time}s")
 
     best_scores.append(scores[0] / sim_time)
     np.savetxt('../output-data/BestScore.csv', best_scores)
