@@ -35,7 +35,7 @@ alpha = 1.001
 best = 0
 current_steps = 0
 
-parents = np.random.randn(child_n, 170)
+parents = np.random.randn(child_n, 154)
 scores = np.random.rand(child_n, )
 dt = 1/200
 i = 0
@@ -51,39 +51,38 @@ while 2137:
     children = reproduce2(parents, scores, child_n, mutation_rate, min_distance)
     children = np.round(children, 4)
     robots = robot.Robot(
-        max_motor_speed=1.0,
-        wheelbase=[0.2] * child_n,
-        lenght=[0.14] * child_n,
-        engine_acceleration=10.0,
-        rotation=np.pi/2,
-        sensor_width=[0.067] * child_n,
-        sensor_n=8,
-        sensor_noise=0.1,
-        sensor_radius=0.005,
-        min_speed=0.1,
-        position=[0.0, 0.0],
-        track_width=0.02
-    )
+    number_of_robots=child_n,
+    max_acceleration=6.0,
+    max_speed=1.5,
+    acceleration_coefficient=50.0,
+    wheelbase=0.15,
+    position=[0.0, 0.0],
+    rotation=np.radians(90),
+    sensor_positions=np.array([[0.15, 0.04], [0.17, 0.02], [0.15, 0.01], [0.15, -0.01], [0.17, -0.02], [0.15, -0.04]]),
+    sensor_noise=0.0,
+    sensor_radius=0.005,
+    track_width=0.018
+)
 
     # c = [robot_controller.RobotController4(child) for child in children[:, :170]]
-    c = robot_controller.RobotController(np.array([10, 8, 6, 4]), children, 2)
+    c = robot_controller.RobotController(np.array([8, 8, 6, 4]), children, 2)
 
     # simulation ---------------------------------------------------------------
     for _ in np.arange(0, sim_time, dt):
         readings = robots.get_sensors(t)
         controls = c.get_motors(readings)
         robots.move(controls, dt)
-        robots.mileage[robots.get_distance(t) > 0.2] = -np.inf
-        robots.mileage[robots.mileage < 0] = -np.inf
-        robots.mileage[robots.rotation > np.deg2rad(210)] = -np.inf
-        robots.mileage[robots.rotation < np.deg2rad(-30)] = -np.inf
+        robots.distance_traveled[robots.get_distance(t) > 0.2] = -np.inf
+        robots.distance_traveled[robots.distance_traveled < 0] = -np.inf
+        robots.distance_traveled[robots.rotation > np.deg2rad(210)] = -np.inf
+        robots.distance_traveled[robots.rotation < np.deg2rad(-30)] = -np.inf
         
-    robots.mileage[robots.mileage < 1e-3] = 1e-3
+    robots.distance_traveled[robots.distance_traveled < 1e-3] = 1e-3
     
     # sort by score ------------------------------------------------------------
-    id = np.argsort(-robots.mileage)
+    id = np.argsort(-robots.distance_traveled)
     parents = children[id]
-    scores = robots.mileage[id]
+    scores = robots.distance_traveled[id]
 
     # update mutation rate -----------------------------------------------------
     Y_mutation.append(mutation_rate)
@@ -104,7 +103,7 @@ while 2137:
     np.savetxt('../output-data/AverageScore.csv', average_scores)
 
     # increase simulation time for longer, more difficult to complete track ----
-    if robots.mileage[id[0]] / sim_time > 0.7 and sim_time < 20:
+    if robots.distance_traveled[id[0]] / sim_time > 0.7 and sim_time < 20:
         sim_time += 1
     
     save_genotype(parents[0], '../output-data/genotype.txt')

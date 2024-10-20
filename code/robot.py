@@ -71,7 +71,7 @@ class Robot:
         acceleration = target_acceleration * non_zero_sign(self.motor_speed)
         acceleration = np.maximum(-self.max_acceleration, np.minimum(acceleration, acceleration_limit))
         acceleration = acceleration * non_zero_sign(self.motor_speed)
-        print(f'Acceleration: {acceleration}')
+        # print(f'Acceleration: {acceleration}')
         self.motor_speed += acceleration * dt
 
         # move robot
@@ -94,8 +94,10 @@ class Robot:
             [np.cos(self.rotation), -np.sin(self.rotation)],
             [np.sin(self.rotation), np.cos(self.rotation)]
         ])
-        positions = np.einsum('mnr, sn -> rsm', rot_matrix, self.sensor_positions).reshape(-1, 2)
-
+        positions = np.einsum('mnr, sn -> rsm', rot_matrix, self.sensor_positions)
+        sensor_n = len(self.sensor_positions)
+        positions += self.position.repeat(sensor_n, axis=0).reshape(-1, sensor_n, 2)
+        positions = positions.reshape(-1, 2)
         return positions
 
     def get_sensors(self, track: track.Track):
@@ -137,8 +139,8 @@ class Robot:
         # draw left wheel
         graphic_engine.draw_rectangle(
             np.array([
-                self.position[0][0] - 0.5 * self.wheelbase[0] * np.cos(np.deg2rad(rotation)),
-                self.position[0][1] + 0.5 * self.wheelbase[0] * np.sin(np.deg2rad(-rotation))]
+                self.position[0][0] - 0.5 * self.wheelbase * np.cos(np.deg2rad(rotation)),
+                self.position[0][1] + 0.5 * self.wheelbase * np.sin(np.deg2rad(-rotation))]
             ), 
             np.array([0.02, 0.03]), 
             -rotation,
@@ -186,6 +188,6 @@ if __name__ == "__main__":
             [-1, -1],
         ]), dt=1e-2)
         
-    print(r.position)
-    print(r.rotation)
-    print(r.get_sensors(t))
+    # print(r.position)
+    # print(r.rotation)
+    # print(r.get_sensors(t))
