@@ -106,7 +106,7 @@ class Robot:
         readings = track.distance_to_chain(positions)
         readings = (self.sensor_radius + self.track_width / 2 - readings) / self.sensor_radius
         readings = np.clip(readings, 0.0, 1.0)
-        # readings += self.sensor_noise * np.random.randn(self.number_of_robots * len(self.sensor_positions))
+        readings += self.sensor_noise * np.random.randn(self.number_of_robots * len(self.sensor_positions))
         readings = np.clip(readings, 0.0, 1.0)
 
         return readings.reshape(self.number_of_robots, len(self.sensor_positions))
