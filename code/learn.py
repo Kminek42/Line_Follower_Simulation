@@ -33,11 +33,11 @@ Y_mutation = []
 alpha = 1.001
 best = 0
 
-parents = np.random.randn(child_n, 298)
+parents = np.random.randn(child_n, 413)
 scores = np.random.rand(child_n, )
 dt = 1/200
 i = 0
-sim_time = 4
+sim_time = 10
 best_scores = []
 average_scores = []
 
@@ -64,7 +64,7 @@ while 2137:
         track_width=0.018
     )
 
-    c = robot_controller.RobotController(np.array([26, 8, 6, 4]), children, 2)
+    c = robot_controller.RobotController(np.array([27, 8, 8, 8, 5]), children, 3)
 
     # simulation ---------------------------------------------------------------
     for _ in np.arange(0, sim_time, dt):
@@ -96,7 +96,7 @@ while 2137:
     np.savetxt('../output-data/AverageScore.csv', average_scores)
 
     # increase simulation time for longer, more difficult to complete track ----
-    if robots.distance_traveled[id[0]] / sim_time > 0.5 and sim_time < 20:
+    if robots.distance_traveled[id[0]] / sim_time > 0.6 and sim_time < 20:
         sim_time += 1
     
     save_genotype(parents[0], '../output-data/genotype.txt')
