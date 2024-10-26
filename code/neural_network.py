@@ -52,8 +52,6 @@ class LinearLayer():
             return lambda x: np.where(x >= 0, 1, -1)
         elif activation == 'hard_clip':
             return lambda x: np.clip(x, -1, 1)
-        elif activation == 'relu':
-            return lambda x: np.maximum(0, x)
         elif activation == 'tanh':
             return lambda x: np.tanh(x)
         else:
