@@ -11,6 +11,16 @@ def mating(gens1, gens2, mutation_rate):
     result = np.where(np.random.random(result.shape) > mutation_rate, result, np.random.randn(*result.shape))
     return result
 
+def mating2(gens1, gens2, mutation_rate):
+    point1, point2 = sorted(np.random.randint(1, len(gens1), size=2))
+    
+    result = np.copy(gens1)
+    result[point1:point2] = gens2[point1:point2]
+    
+    mutation_mask = np.random.random(result.shape) < mutation_rate
+    result[mutation_mask] = np.random.randn(np.sum(mutation_mask))
+    
+    return result
 
 def reproduce2(parents: np.array, scores: np.array, children_n: int, mutation_rate: float, min_distance: float):
     '''
@@ -21,13 +31,13 @@ def reproduce2(parents: np.array, scores: np.array, children_n: int, mutation_ra
     min_distance: distance added to score, so everyone can have non-zero chance to reproduce
     '''
     parents = np.array(parents)
-    output = [parents[0], parents[1]]  # elitism
+    output = [parents[0], parents[1]]
     scores[scores < 1e-3] = 1e-3
     scores += min_distance
     scores /= scores.sum()
     for _ in range(children_n-2):
         p1, p2 = np.random.choice(np.arange(len(parents)), size=(2, ), p=scores)
-        output.append(mating(parents[p1], parents[p2], mutation_rate))
+        output.append(mating2(parents[p1], parents[p2], mutation_rate))
 
     return np.array(output)
 
