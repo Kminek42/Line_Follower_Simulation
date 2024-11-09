@@ -35,7 +35,7 @@ Y_mutation = []
 alpha = 1.001
 best = 0
 
-parents = np.random.randn(child_n, 170)
+parents = np.random.randn(child_n, 298)
 scores = np.random.rand(child_n, )
 dt = 1/200
 i = 0
@@ -57,16 +57,16 @@ while 2137:
         max_acceleration=20.0,
         max_speed=1.0,
         acceleration_coefficient=50.0,
-        wheelbase=0.2,
+        wheelbase=0.07,
         position=[0.0, 0.0],
         rotation=np.radians(90),
-        sensor_positions=np.array([0.14, 0]) + np.array(np.meshgrid(np.linspace(0.0, 0.0, 1), np.linspace(0.033, -0.033, 8))).T.reshape(-1, 2),
+        sensor_positions=np.array([0.0825, 0]) + np.array(np.meshgrid(np.linspace(-0.027, 0.0, 3), np.linspace(0.02765, -0.02765, 8))).T.reshape(-1, 2),
         sensor_noise=0.1,
         sensor_radius=0.005,
         track_width=0.018
     )
 
-    c = robot_controller.RobotController(np.array([10, 8, 6, 4]), children, 2)
+    c = robot_controller.RobotController(np.array([26, 8, 6, 4]), children, 2)
 
     # simulation ---------------------------------------------------------------
     for _ in np.arange(0, sim_time, dt):
