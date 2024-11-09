@@ -89,7 +89,7 @@ while 2137:
     best = np.round(scores[0] / sim_time, 2)
     mutation_rate = mutation_rate_sceduler(1e-3, best)
     print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, mutation rate: {np.round(mutation_rate, 4)}, best specimen's average speed: {best} m/s, sim time: {sim_time}s")
-
+    print(f'Summetry: {robots.reading_symmetry_score[0]}')
     best_scores.append(scores[0] / sim_time)
     np.savetxt('../output-data/BestScore.csv', best_scores)
     average_scores.append(np.mean(scores) / sim_time)
