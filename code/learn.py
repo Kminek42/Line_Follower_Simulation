@@ -17,7 +17,9 @@ t.add_segment('smooth_right')
 t.add_segment("straight")
 t.add_segment('90_left')
 t.add_segment('90_right')
+t.add_segment('90_right')
 t.add_segment('90_left')
+t.add_segment('x-intersection')
 
 for _ in range(160):
     t.add_segment("")
@@ -33,11 +35,11 @@ Y_mutation = []
 alpha = 1.001
 best = 0
 
-parents = np.random.randn(child_n, 218)
+parents = np.random.randn(child_n, 170)
 scores = np.random.rand(child_n, )
-dt = 1/100
+dt = 1/200
 i = 0
-sim_time = 4
+sim_time = 10
 best_scores = []
 average_scores = []
 
@@ -52,19 +54,19 @@ while 2137:
     children = np.round(children, 4)
     robots = robot.Robot(
         number_of_robots=child_n,
-        max_acceleration=25.0,
+        max_acceleration=20.0,
         max_speed=1.0,
         acceleration_coefficient=50.0,
         wheelbase=0.2,
         position=[0.0, 0.0],
         rotation=np.radians(90),
-        sensor_positions=np.array([0.14, 0]) + np.array(np.meshgrid(np.linspace(0.0, 0.0, 1), np.linspace(-0.033, 0.033, 8))).T.reshape(-1, 2),
-        sensor_noise=0.0,
+        sensor_positions=np.array([0.14, 0]) + np.array(np.meshgrid(np.linspace(0.0, 0.0, 1), np.linspace(0.033, -0.033, 8))).T.reshape(-1, 2),
+        sensor_noise=0.1,
         sensor_radius=0.005,
         track_width=0.018
     )
 
-    c = robot_controller.RobotController(np.array([11, 9, 7, 5]), children, 3)
+    c = robot_controller.RobotController(np.array([10, 8, 6, 4]), children, 2)
 
     # simulation ---------------------------------------------------------------
     for _ in np.arange(0, sim_time, dt):
@@ -79,7 +81,8 @@ while 2137:
     robots.distance_traveled[robots.distance_traveled < 1e-3] = 1e-3
     
     # sort by score ------------------------------------------------------------
-    id = np.argsort(-robots.distance_traveled)
+    criterion = robots.distance_traveled
+    id = np.argsort(-criterion)
     parents = children[id]
     scores = robots.distance_traveled[id]
 
@@ -88,15 +91,16 @@ while 2137:
     np.savetxt('../output-data/MutationRate.csv', Y_mutation)
     best = np.round(scores[0] / sim_time, 2)
     mutation_rate = mutation_rate_sceduler(1e-3, best)
-    print(f"Generation: {i}, Learn time: {np.round(time() - t0, 2)} s, mutation rate: {np.round(mutation_rate, 4)}, best specimen's average speed: {best} m/s, sim time: {sim_time}s")
-    print(f'Summetry: {robots.reading_symmetry_score[0]}')
+    print(f"Generation: {i}\nLearn time: {np.round(time() - t0, 2)} s\nmutation rate: {np.round(mutation_rate, 4)}\nbest specimen's average speed: {best} m/s\nsim time: {sim_time}s\n")
     best_scores.append(scores[0] / sim_time)
     np.savetxt('../output-data/BestScore.csv', best_scores)
     average_scores.append(np.mean(scores) / sim_time)
     np.savetxt('../output-data/AverageScore.csv', average_scores)
 
     # increase simulation time for longer, more difficult to complete track ----
-    if robots.distance_traveled[id[0]] / sim_time > 0.65 and sim_time < 20:
+    if robots.distance_traveled[id[0]] / sim_time > 0.5 and sim_time < 20:
         sim_time += 1
     
-    save_genotype(parents[0], '../output-data/genotype.txt')
+    if scores[0] > best:
+        best = scores[0]
+        save_genotype(parents[0], '../output-data/genotype.txt')

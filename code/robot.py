@@ -56,8 +56,6 @@ class Robot:
         self.motor_speed = np.zeros((self.number_of_robots, 2))
 
         self.distance_traveled = np.zeros((self.number_of_robots, ))
-        self.reading_symmetry_score = np.zeros((self.number_of_robots, ))
-        self.number_of_readings = 0
 
     def move(self, target_motor_speed, dt):
         assert target_motor_speed.ndim == 2, 'Inputs must be a 2D array (batch_n, 2).'
@@ -112,10 +110,6 @@ class Robot:
         readings = np.clip(readings, 0.0, 1.0)
         readings = readings.reshape(self.number_of_robots, len(self.sensor_positions))
         
-        temp_reading_symmetry_score = 1 - ((readings - readings[..., ::-1]) ** 2).mean(axis=1)
-        self.reading_symmetry_score += (temp_reading_symmetry_score - self.reading_symmetry_score) / (self.number_of_readings + 1)
-        self.number_of_readings += 1
-
         return readings
     
     def get_distance(self, track: track.Track):
