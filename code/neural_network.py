@@ -54,6 +54,8 @@ class LinearLayer():
             return lambda x: np.clip(x, -1, 1)
         elif activation == 'tanh':
             return lambda x: np.tanh(x)
+        elif activation == 'sigmoid':
+            return lambda x: 1/(1 + np.exp(-x))
         else:
             raise ValueError(f'Unsupported activation function: {activation}')
     

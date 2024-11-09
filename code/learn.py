@@ -6,7 +6,7 @@ from time import time
 import matplotlib.pyplot as plt
 import robot_controller
 
-np.random.seed(42)
+np.random.seed(1)
 np.set_printoptions(suppress=True)
 
 t = track.Track()
@@ -27,17 +27,17 @@ t.finalize(128)
 # plt.show()
 
 child_n = 64
-mutation_rate = 1/100
+mutation_rate = 1/200
 min_distance = 0.1
 Y_mutation = []
 alpha = 1.001
 best = 0
 
-parents = np.random.randn(child_n, 413)
+parents = np.random.randn(child_n, 218)
 scores = np.random.rand(child_n, )
-dt = 1/200
+dt = 1/100
 i = 0
-sim_time = 10
+sim_time = 4
 best_scores = []
 average_scores = []
 
@@ -52,26 +52,26 @@ while 2137:
     children = np.round(children, 4)
     robots = robot.Robot(
         number_of_robots=child_n,
-        max_acceleration=10.0,
+        max_acceleration=25.0,
         max_speed=1.0,
         acceleration_coefficient=50.0,
-        wheelbase=0.07,
+        wheelbase=0.2,
         position=[0.0, 0.0],
         rotation=np.radians(90),
-        sensor_positions=np.array([0.095, 0]) + np.array(np.meshgrid(np.linspace(-0.03, 0.0, 3), np.linspace(-0.033, 0.033, 8))).T.reshape(-1, 2),
+        sensor_positions=np.array([0.14, 0]) + np.array(np.meshgrid(np.linspace(0.0, 0.0, 1), np.linspace(-0.033, 0.033, 8))).T.reshape(-1, 2),
         sensor_noise=0.0,
         sensor_radius=0.005,
         track_width=0.018
     )
 
-    c = robot_controller.RobotController(np.array([27, 8, 8, 8, 5]), children, 3)
+    c = robot_controller.RobotController(np.array([11, 9, 7, 5]), children, 3)
 
     # simulation ---------------------------------------------------------------
     for _ in np.arange(0, sim_time, dt):
         readings = robots.get_sensors(t)
         controls = c.get_motors(readings)
         robots.move(controls, dt)
-        robots.distance_traveled[robots.get_distance(t) > 0.25] = -np.inf
+        robots.distance_traveled[robots.get_distance(t) > 0.2] = -np.inf
         robots.distance_traveled[robots.distance_traveled < 0] = -np.inf
         robots.distance_traveled[robots.rotation > np.deg2rad(210)] = -np.inf
         robots.distance_traveled[robots.rotation < np.deg2rad(-30)] = -np.inf
@@ -96,7 +96,7 @@ while 2137:
     np.savetxt('../output-data/AverageScore.csv', average_scores)
 
     # increase simulation time for longer, more difficult to complete track ----
-    if robots.distance_traveled[id[0]] / sim_time > 0.6 and sim_time < 20:
+    if robots.distance_traveled[id[0]] / sim_time > 0.65 and sim_time < 20:
         sim_time += 1
     
     save_genotype(parents[0], '../output-data/genotype.txt')
