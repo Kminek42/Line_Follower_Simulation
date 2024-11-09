@@ -91,7 +91,7 @@ while running:
 
     sensors = r.get_sensors(t)
     motors = c.get_motors(sensors)
-    print(np.round(sensors, 1).reshape(-1, 8), np.round(motors, 2), r.reading_symmetry_score[0])
+    print(np.round(sensors, 1).reshape(-1, 8), np.round(motors, 2))
     r.move(motors, dt)
     # r.move(np.array([[1, .1]]), dt)
     ge.draw_track(t)
