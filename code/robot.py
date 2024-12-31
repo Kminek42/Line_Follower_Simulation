@@ -89,7 +89,7 @@ class Robot:
         
         return V
 
-    def get_sensor_positions(self):
+    def get_sensor_positions(self) -> np.array:
         rot_matrix = np.array([
             [np.cos(self.rotation), -np.sin(self.rotation)],
             [np.sin(self.rotation), np.cos(self.rotation)]
@@ -100,7 +100,7 @@ class Robot:
         positions = positions.reshape(-1, 2)
         return positions
 
-    def get_sensors(self, track: track.Track):
+    def get_sensors(self, track: track.Track) -> np.array:
         positions = self.get_sensor_positions()
         
         readings = track.distance_to_chain(positions)
