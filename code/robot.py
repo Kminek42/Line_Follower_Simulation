@@ -89,6 +89,11 @@ class Robot:
         
         return V
 
+    def reset(self):
+        self.motor_speed *= 0
+        self.position *= 0
+        self.rotation = np.radians(90)
+        
     def get_sensor_positions(self) -> np.array:
         rot_matrix = np.array([
             [np.cos(self.rotation), -np.sin(self.rotation)],
