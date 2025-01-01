@@ -3,7 +3,7 @@ import numpy as np
 class NeuralNetwork:
     def __init__(self, layer_sizes: np.ndarray, parameters: np.ndarray):
         assert layer_sizes.ndim == 1, 'Layer sizes must be a 1D array.'
-        parameters_num = self._get_parameters_num(layer_sizes)
+        parameters_num = get_parameters_num(layer_sizes)
         assert parameters.shape[1] == parameters_num, f'Parameters must have {parameters_num} parameters in second dimension.'
         
         self.layers = []
@@ -20,14 +20,6 @@ class NeuralNetwork:
             
             self.layers.append(layer)
         
-    def _get_parameters_num(self, layer_sizes: np.ndarray) -> int:
-        total_parameters = 0
-        for layer_num, _ in enumerate(layer_sizes[:-1]):
-            weights_n = layer_sizes[layer_num] * layer_sizes[layer_num + 1]
-            biases_n = layer_sizes[layer_num + 1]
-            total_parameters += weights_n + biases_n
-    
-        return total_parameters
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         assert x.ndim == 2, 'Inputs must be a 2D array (batch_n, input_size).'
@@ -35,6 +27,14 @@ class NeuralNetwork:
             x = layer.forward(x)
         return x
     
+def get_parameters_num(layer_sizes: np.ndarray) -> int:
+    total_parameters = 0
+    for layer_num, _ in enumerate(layer_sizes[:-1]):
+        weights_n = layer_sizes[layer_num] * layer_sizes[layer_num + 1]
+        biases_n = layer_sizes[layer_num + 1]
+        total_parameters += weights_n + biases_n
+
+    return total_parameters
 
 class LinearLayer():
     def __init__(self, input_size: int, output_size: int, parameters: np.ndarray, activation: str):
