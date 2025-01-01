@@ -1,106 +1,109 @@
-import robot
-import track
+from robot import Robot
+from track import Track
+from neural_network import get_parameters_num
 from genetic import reproduce2, save_genotype
 import numpy as np
 from time import time
 import matplotlib.pyplot as plt
-import robot_controller
+from robot_controller import RobotController
+import pandas as pd
 
 np.random.seed(1)
 np.set_printoptions(suppress=True)
 
-t = track.Track()
-t.add_segment("straight")
-t.add_segment('smooth_left')
-t.add_segment('straight')
-t.add_segment('smooth_right')
-t.add_segment("straight")
-t.add_segment('90_left')
-t.add_segment('90_right')
-t.add_segment('90_right')
-t.add_segment('90_left')
-t.add_segment('x-intersection')
+track = Track()
+track.add_segment("straight")
+track.add_segment('smooth_left')
+track.add_segment('straight')
+track.add_segment('smooth_right')
+track.add_segment("straight")
+track.add_segment('90_left')
+track.add_segment('90_right')
+track.add_segment('90_right')
+track.add_segment('90_left')
+track.add_segment('x-intersection')
 
 for _ in range(160):
-    t.add_segment("")
-t.finalize(128)
-# plt.axis('equal')
-# plt.plot(t.chain[:, 0], t.chain[:, 1])
-# plt.show()
+    track.add_segment("")
+track.finalize(128)
 
-child_n = 64
-mutation_rate = 1/200
-min_distance = 0.1
-Y_mutation = []
-alpha = 1.001
-best = 0
-
-parents = np.random.randn(child_n, 170)
-scores = np.random.rand(child_n, )
-dt = 1/200
-i = 0
+total_children = 1260
+children_per_generation = 10
 sim_time = 10
-best_scores = []
-average_scores = []
-
-mutation_rate_sceduler = lambda a, score: a / (score + a)
-
-while 2137:
-    t0 = time()
-    i += 1
-    
-    # create new robots --------------------------------------------------------
-    children = reproduce2(parents, scores, child_n, mutation_rate, min_distance)
-    children = np.round(children, 4)
-    robots = robot.Robot(
-        number_of_robots=child_n,
+dt = 5e-3
+progres = 0
+network_shape = np.array([10, 7, 4])
+genotypes = np.random.randn(children_per_generation, get_parameters_num(network_shape))
+t0 = time()
+while progres < total_children:
+    robots = Robot(
+        number_of_robots=children_per_generation,
         max_acceleration=20.0,
         max_speed=1.0,
-        acceleration_coefficient=50.0,
+        acceleration_coefficient=100.0,
         wheelbase=0.2,
         position=[0.0, 0.0],
         rotation=np.radians(90),
         sensor_positions=np.array([0.14, 0]) + np.array(np.meshgrid(np.linspace(0.0, 0.0, 1), np.linspace(0.033, -0.033, 8))).T.reshape(-1, 2),
-        sensor_noise=0.1,
+        sensor_noise=0.0,
         sensor_radius=0.005,
         track_width=0.018
     )
-
-    c = robot_controller.RobotController(np.array([10, 8, 6, 4]), children, 2)
-
-    # simulation ---------------------------------------------------------------
+    controller = RobotController(network_shape, genotypes, network_shape[0] - 8)
     for _ in np.arange(0, sim_time, dt):
-        readings = robots.get_sensors(t)
-        controls = c.get_motors(readings)
+        readings = robots.get_sensors(track)
+        controls = controller.get_motors(readings)
         robots.move(controls, dt)
-        robots.distance_traveled[robots.get_distance(t) > 0.2] = -np.inf
+        robots.distance_traveled[robots.get_distance(track) > 0.2] = -np.inf
         robots.distance_traveled[robots.distance_traveled < 0] = -np.inf
         robots.distance_traveled[robots.rotation > np.deg2rad(210)] = -np.inf
         robots.distance_traveled[robots.rotation < np.deg2rad(-30)] = -np.inf
-        
-    robots.distance_traveled[robots.distance_traveled < 1e-3] = 1e-3
+    
+    robots.distance_traveled[robots.distance_traveled < 0] = 0
     
     # sort by score ------------------------------------------------------------
     criterion = robots.distance_traveled
     id = np.argsort(-criterion)
-    parents = children[id]
     scores = robots.distance_traveled[id]
-
-    # update mutation rate -----------------------------------------------------
-    Y_mutation.append(mutation_rate)
-    np.savetxt('../output-data/MutationRate.csv', Y_mutation)
-    best = np.round(scores[0] / sim_time, 2)
-    mutation_rate = mutation_rate_sceduler(1e-3, best)
-    print(f"Generation: {i}\nLearn time: {np.round(time() - t0, 2)} s\nmutation rate: {np.round(mutation_rate, 4)}\nbest specimen's average speed: {best} m/s\nsim time: {sim_time}s\n")
-    best_scores.append(scores[0] / sim_time)
-    np.savetxt('../output-data/BestScore.csv', best_scores)
-    average_scores.append(np.mean(scores) / sim_time)
-    np.savetxt('../output-data/AverageScore.csv', average_scores)
-
-    # increase simulation time for longer, more difficult to complete track ----
-    if robots.distance_traveled[id[0]] / sim_time > 0.5 and sim_time < 20:
-        sim_time += 1
+    progres += children_per_generation
+    print(scores[0] / sim_time, progres)
+    genotypes = genotypes[id]
+    genotypes = reproduce2(genotypes, scores, children_per_generation, 1e-2, 1e-1)
     
-    if scores[0] > best:
-        best = scores[0]
-        save_genotype(parents[0], '../output-data/genotype.txt')
+t1 = time()
+
+print(f'Training time: {np.round(t1 - t0, 2)} seconds')
+
+def simulate(
+    robots,
+    track,
+    controller, 
+    sim_time,
+    dt
+):
+    for _ in np.arange(0, sim_time, dt):
+        readings = robots.get_sensors(track)
+        controls = controller.get_motors(readings)
+        robots.move(controls, dt)
+        robots.distance_traveled[robots.get_distance(track) > 0.2] = -np.inf
+        robots.distance_traveled[robots.distance_traveled < 0] = -np.inf
+        robots.distance_traveled[robots.rotation > np.deg2rad(210)] = -np.inf
+        robots.distance_traveled[robots.rotation < np.deg2rad(-30)] = -np.inf
+    
+    robots.distance_traveled[robots.distance_traveled < 0] = 0
+    
+    # sort by score ------------------------------------------------------------
+    criterion = robots.distance_traveled
+    id = np.argsort(-criterion)
+    scores = robots.distance_traveled[id]
+    
+    return id, scores
+
+
+def learn(
+    total_children,
+    children_per_generation,
+    mutation_rate,
+    network_shape
+):
+    pass
