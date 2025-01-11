@@ -120,6 +120,16 @@ class Robot:
     def get_distance(self, track: track.Track):
         '''Returns the distance from robot to the track'''
         return track.distance_to_chain(self.position)
+    
+    def get_all_positions(self):
+        rotation = np.rad2deg(self.rotation[0] - np.pi/2)
+        positions = {}
+        positions['main body'] = self.position
+        positions['wheels'] = [self.position[0][0] - 0.5 * self.wheelbase * np.cos(np.deg2rad(rotation)),
+                self.position[0][1] + 0.5 * self.wheelbase * np.sin(np.deg2rad(-rotation))]
+        positions['sensors'] = self.get_sensor_positions()
+        
+        return positions
 
     def draw(self, graphic_engine):
         rotation = np.rad2deg(self.rotation[0] - np.pi/2)
@@ -128,7 +138,7 @@ class Robot:
             self.position[0], 
             np.array([0.03, 0.06]), 
             -rotation,
-            (64, 255, 64)
+            (32, 255, 32)
         )
 
         # draw right wheel
@@ -139,7 +149,7 @@ class Robot:
             ), 
             np.array([0.02, 0.03]), 
             -rotation,
-            (255, 0, 0)
+            (255, 32, 32)
         )
 
         # draw left wheel
@@ -150,7 +160,7 @@ class Robot:
             ), 
             np.array([0.02, 0.03]), 
             -rotation,
-            (255, 0, 0)
+            (255, 32, 32)
         )
 
         # draw sensors
@@ -158,7 +168,7 @@ class Robot:
         for p in pos:
             graphic_engine.draw_rectangle(
                 p, 
-                np.array([0.005, 0.005]), 
+                0.5 * np.array([0.005, 0.005]), 
                 # np.rad2deg(rotation),
                 -rotation,
                 (64, 64, 255)
