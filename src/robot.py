@@ -168,7 +168,7 @@ class Robot:
         for p in pos:
             graphic_engine.draw_rectangle(
                 p, 
-                0.5 * np.array([0.005, 0.005]), 
+                np.array([0.005, 0.005]), 
                 # np.rad2deg(rotation),
                 -rotation,
                 (64, 64, 255)
